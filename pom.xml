@@ -113,6 +113,7 @@
     <vers.guava>11.0.2</vers.guava>
     <vers.hadoop>2.0.0-cdh${cdh.version}</vers.hadoop>
     <vers.hadoop-mr1>2.0.0-mr1-cdh${cdh.version}</vers.hadoop-mr1>
+    <vers.hbase>0.94.6-cdh${cdh.version}</vers.hbase>
     <vers.hcatalog>0.5.0-cdh${cdh.version}</vers.hcatalog>
     <vers.jexl>2.1.1</vers.jexl>
     <vers.compress>1.4.1</vers.compress>
@@ -614,6 +615,19 @@
         <type>test-jar</type>
         <scope>test</scope>
       </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase</artifactId>
+        <version>${vers.hbase}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase</artifactId>
+        <version>${vers.hbase}</version>
+        <classifier>tests</classifier>
+        <scope>provided</scope>
+      </dependency>      
       <dependency>
         <groupId>org.apache.hcatalog</groupId>
         <artifactId>hcatalog-core</artifactId>
