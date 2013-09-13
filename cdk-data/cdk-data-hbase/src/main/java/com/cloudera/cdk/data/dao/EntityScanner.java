@@ -15,8 +15,7 @@
  */
 package com.cloudera.cdk.data.dao;
 
-import java.io.Closeable;
-import java.util.Iterator;
+import com.cloudera.cdk.data.DatasetReader;
 
 /**
  * A Scanner interface that represents an Iterable that allows us to iterate
@@ -27,17 +26,6 @@ import java.util.Iterator;
  * @param <E>
  *          The type of the entity to return
  */
-public interface EntityScanner<K, E> extends Iterator<KeyEntity<K, E>>,
-    Iterable<KeyEntity<K, E>>, Closeable {
+public interface EntityScanner<K, E> extends DatasetReader<KeyEntity<K, E>> {
 
-  /**
-   * Opens the scanner over the table, with scan parameters.
-   */
-  public void open();
-
-  /**
-   * Closes the entity scanner, and cleans up any underlying resources.
-   */
-  @Override
-  public void close();
 }

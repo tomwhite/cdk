@@ -182,8 +182,18 @@ public class BaseEntityScanner<K, E> implements EntityScanner<K, E> {
   }
 
   @Override
+  public boolean isOpen() {
+    return true; // TODO: track state properly
+  }
+
+  @Override
   public boolean hasNext() {
     return iterator.hasNext();
+  }
+
+  @Override
+  public KeyEntity<K, E> read() {
+    throw new UnsupportedOperationException("read() not supported, use next().");
   }
 
   @Override
