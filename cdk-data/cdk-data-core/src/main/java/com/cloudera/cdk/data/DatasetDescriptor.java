@@ -50,6 +50,7 @@ import org.apache.avro.reflect.ReflectData;
 public class DatasetDescriptor {
 
   private final Schema schema;
+  private final Schema keySchema;
   private final URL schemaUrl;
   private final Format format;
   private final PartitionStrategy partitionStrategy;
@@ -62,17 +63,19 @@ public class DatasetDescriptor {
   public DatasetDescriptor(Schema schema, @Nullable PartitionStrategy
       partitionStrategy) {
 
-    this(schema, null, Formats.AVRO, partitionStrategy);
+    this(schema, null, null, Formats.AVRO, partitionStrategy);
   }
 
   /**
    * Create an instance of this class with the supplied {@link Schema}, optional URL,
    * {@link Format} and optional {@link PartitionStrategy}.
    */
-  DatasetDescriptor(Schema schema, @Nullable URL schemaUrl, Format format,
+  DatasetDescriptor(Schema schema, @Nullable Schema keySchema, @Nullable URL schemaUrl,
+      Format format,
       @Nullable PartitionStrategy partitionStrategy) {
 
     this.schema = schema;
+    this.keySchema = keySchema;
     this.schemaUrl = schemaUrl;
     this.format = format;
     this.partitionStrategy = partitionStrategy;
@@ -89,6 +92,10 @@ public class DatasetDescriptor {
    */
   public Schema getSchema() {
     return schema;
+  }
+
+  public Schema getKeySchema() {
+    return keySchema;
   }
 
   /**
@@ -149,6 +156,7 @@ public class DatasetDescriptor {
   public static class Builder implements Supplier<DatasetDescriptor> {
 
     private Schema schema;
+    private Schema keySchema;
     private URL schemaUrl;
     private Format format = Formats.AVRO;
     private PartitionStrategy partitionStrategy;
@@ -253,6 +261,11 @@ public class DatasetDescriptor {
      */
     public Builder schema(String s) {
       this.schema = new Schema.Parser().parse(s);
+      return this;
+    }
+
+    public Builder keySchema(String s) {
+      this.keySchema = new Schema.Parser().parse(s);
       return this;
     }
 
@@ -363,7 +376,7 @@ public class DatasetDescriptor {
       Preconditions.checkState(schema != null,
         "Descriptor schema may not be null");
 
-      return new DatasetDescriptor(schema, schemaUrl, format, partitionStrategy);
+      return new DatasetDescriptor(schema, keySchema, schemaUrl, format, partitionStrategy);
     }
 
   }
