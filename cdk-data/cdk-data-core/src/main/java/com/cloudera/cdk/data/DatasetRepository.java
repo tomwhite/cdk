@@ -45,7 +45,7 @@ import javax.annotation.concurrent.Immutable;
  * @see DatasetDescriptor
  */
 @Immutable
-public interface DatasetRepository {
+public interface DatasetRepository<D extends Dataset> {
 
   /**
    * Get the latest version of a named {@link Dataset}. If no dataset with the
@@ -57,7 +57,7 @@ public interface DatasetRepository {
    *
    * @since 0.7.0
    */
-  Dataset load(String name);
+  D load(String name);
 
   /**
    * Deprecated synonym for {@link #load}.
@@ -65,7 +65,7 @@ public interface DatasetRepository {
    * @deprecated will be removed in 0.8.x
    */
   @Deprecated
-  Dataset get(String name);
+  D get(String name);
 
   /**
    * Create a {@link Dataset} with the supplied {@code descriptor}. Depending on
@@ -81,7 +81,7 @@ public interface DatasetRepository {
    * @return The newly created dataset
    * @throws DatasetRepositoryException
    */
-  Dataset create(String name, DatasetDescriptor descriptor);
+  D create(String name, DatasetDescriptor descriptor);
 
   /**
    * Update an existing {@link Dataset} to reflect the supplied {@code descriptor}. The
@@ -103,7 +103,7 @@ public interface DatasetRepository {
    *
    * @since 0.3.0
    */
-  Dataset update(String name, DatasetDescriptor descriptor);
+  D update(String name, DatasetDescriptor descriptor);
 
   /**
    * Delete the named {@link Dataset}. If no dataset with the
