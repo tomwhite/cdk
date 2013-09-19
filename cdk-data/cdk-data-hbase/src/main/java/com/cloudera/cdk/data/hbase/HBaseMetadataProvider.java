@@ -1,6 +1,7 @@
 package com.cloudera.cdk.data.hbase;
 
 import com.cloudera.cdk.data.DatasetDescriptor;
+import com.cloudera.cdk.data.DatasetRepositoryException;
 import com.cloudera.cdk.data.FieldPartitioner;
 import com.cloudera.cdk.data.NoSuchDatasetException;
 import com.cloudera.cdk.data.PartitionStrategy;
@@ -26,7 +27,6 @@ import org.codehaus.jackson.JsonNode;
 
 public class HBaseMetadataProvider extends AbstractMetadataProvider {
 
-  public static final String ENTITY_NAME = "default"; // only support one entity per table
   private HBaseAdmin hbaseAdmin;
   private SchemaManager schemaManager;
 
@@ -44,7 +44,7 @@ public class HBaseMetadataProvider extends AbstractMetadataProvider {
     AvroKeyEntitySchemaParser parser = new AvroKeyEntitySchemaParser();
     AvroEntitySchema entitySchema = parser.parseEntity(entitySchemaString);
 
-    schemaManager.createSchema(tableName, ENTITY_NAME, keySchemaString,
+    schemaManager.createSchema(tableName, getEntityName(descriptor), keySchemaString,
         entitySchemaString,
         "com.cloudera.cdk.data.hbase.avro.impl.AvroKeyEntitySchemaParser",
         "com.cloudera.cdk.data.hbase.avro.impl.AvroKeySerDe",
@@ -91,7 +91,7 @@ public class HBaseMetadataProvider extends AbstractMetadataProvider {
 
   @Override
   public DatasetDescriptor update(String name, DatasetDescriptor descriptor) {
-    schemaManager.migrateSchema(name, ENTITY_NAME, descriptor.getSchema().toString());
+    schemaManager.migrateSchema(name, getEntityName(descriptor), descriptor.getSchema().toString());
     return descriptor;
   }
 
@@ -101,9 +101,16 @@ public class HBaseMetadataProvider extends AbstractMetadataProvider {
       throw new NoSuchDatasetException("No such dataset: " + name);
     }
 
+    List<String> entityNames = schemaManager.getEntityNames(name);
+    if (entityNames.size() > 1) {
+      throw new DatasetRepositoryException("Only one entity per table is supported.");
+    }
+
+    String entityName = entityNames.get(0);
+
     return getDatasetDescriptor(
-        schemaManager.getKeySchema(name, ENTITY_NAME).getRawSchema(),
-        schemaManager.getEntitySchema(name, ENTITY_NAME).getRawSchema());
+        schemaManager.getKeySchema(name, entityName).getRawSchema(),
+        schemaManager.getEntitySchema(name, entityName).getRawSchema());
   }
 
   @Override
@@ -113,7 +120,11 @@ public class HBaseMetadataProvider extends AbstractMetadataProvider {
 
   @Override
   public boolean exists(String name) {
-    return schemaManager.hasManagedSchema(name, ENTITY_NAME);
+    return !schemaManager.getEntityNames(name).isEmpty();
+  }
+
+  static String getEntityName(DatasetDescriptor descriptor) {
+    return descriptor.getSchema().getName();
   }
 
   /*
