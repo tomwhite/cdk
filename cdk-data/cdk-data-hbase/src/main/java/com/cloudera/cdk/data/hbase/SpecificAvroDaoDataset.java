@@ -68,13 +68,7 @@ class SpecificAvroDaoDataset implements Dataset {
     return new DatasetAccessor<E>() {
       @Override
       public E get(PartitionKey key) {
-        // turn a PartitionKey into a GenericRecord
-        GenericRecord keyRecord = new GenericData.Record(keySchema);
-        int i = 0;
-        for (FieldPartitioner fp : descriptor.getPartitionStrategy().getFieldPartitioners()) {
-          keyRecord.put(fp.getName(), key.get(i++));
-        }
-        return (E) dao.get(keyRecord);
+        return (E) dao.get(toGenericRecord(key));
       }
 
       @Override
@@ -82,6 +76,25 @@ class SpecificAvroDaoDataset implements Dataset {
         // the entity contains the key fields so we can use the same Specific
         // instance as a key
         return dao.put(e, e);
+      }
+
+      @Override
+      public void delete(PartitionKey key) {
+        dao.delete(toGenericRecord(key));
+      }
+
+      @Override
+      public boolean delete(PartitionKey key, E entity) {
+        return dao.delete(toGenericRecord(key), entity);
+      }
+
+      private GenericRecord toGenericRecord(PartitionKey key) {
+        GenericRecord keyRecord = new GenericData.Record(keySchema);
+        int i = 0;
+        for (FieldPartitioner fp : descriptor.getPartitionStrategy().getFieldPartitioners()) {
+          keyRecord.put(fp.getName(), key.get(i++));
+        }
+        return keyRecord;
       }
     };
   }
