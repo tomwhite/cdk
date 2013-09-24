@@ -1,27 +1,19 @@
 package com.cloudera.cdk.data.hbase.avro;
 
-import com.cloudera.cdk.data.Dataset;
-import com.cloudera.cdk.data.DatasetAccessor;
 import com.cloudera.cdk.data.DatasetDescriptor;
 import com.cloudera.cdk.data.DatasetReader;
-import com.cloudera.cdk.data.DatasetWriter;
 import com.cloudera.cdk.data.MapDataset;
 import com.cloudera.cdk.data.MapDatasetAccessor;
 import com.cloudera.cdk.data.MapDatasetWriter;
 import com.cloudera.cdk.data.MapEntry;
-import com.cloudera.cdk.data.PartitionKey;
-import com.cloudera.cdk.data.PartitionStrategy;
 import com.cloudera.cdk.data.hbase.HBaseDatasetRepository;
 import com.cloudera.cdk.data.hbase.avro.entities.ArrayRecord;
 import com.cloudera.cdk.data.hbase.avro.entities.EmbeddedRecord;
-import com.cloudera.cdk.data.hbase.avro.entities.TestEntity;
 import com.cloudera.cdk.data.hbase.avro.entities.TestEnum;
 import com.cloudera.cdk.data.hbase.avro.entities.TestKey;
 import com.cloudera.cdk.data.hbase.avro.entities.TestRecord;
 import com.cloudera.cdk.data.hbase.avro.impl.AvroUtils;
-import com.cloudera.cdk.data.hbase.manager.DefaultSchemaManager;
 import com.cloudera.cdk.data.hbase.testing.HBaseTestUtils;
-import com.cloudera.cdk.data.hbase.tool.SchemaTool;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +33,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 public class HBaseDatasetRepositoryTest {
