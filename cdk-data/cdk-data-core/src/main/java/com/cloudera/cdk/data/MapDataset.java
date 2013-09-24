@@ -17,14 +17,14 @@ package com.cloudera.cdk.data;
 
 public interface MapDataset extends Dataset {
 
-  <K, E> MapDatasetAccessor<K, E> newAccessor();
+  <K, E> MapDatasetAccessor<K, E> newMapAccessor();
 
-  <K, E> MapDatasetWriter<K, E> getWriter();
+  <K, E> MapDatasetWriter<K, E> getMapWriter();
 
-  <K, E> MapDatasetReader<K, E> getReader();
+  <K, E> DatasetReader<MapEntry<K, E>> getMapReader();
 
-  <K, E> MapDatasetReader<K, E> getReader(K startKey, K stopKey);
+  <K, E> DatasetReader<MapEntry<K, E>> getMapReader(K startKey, K stopKey);
 
-  <K, E> MapDatasetReader<K, E> getReader(MapKey startKey, MapKey stopKey);
+  <K, E> DatasetReader<MapEntry<K, E>> getMapReader(MapKey startKey, MapKey stopKey);
 
 }
