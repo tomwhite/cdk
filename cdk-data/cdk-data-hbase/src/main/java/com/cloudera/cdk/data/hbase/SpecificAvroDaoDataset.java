@@ -67,22 +67,22 @@ class SpecificAvroDaoDataset implements MapDataset {
   }
 
   @Override
-  public <K, E> MapDatasetWriter<K, E> getMapWriter() {
+  public <K, E> MapDatasetWriter<K, E> newMapWriter() {
     return new SpecificAvroDaoDatasetWriter(dao.newBatch());
   }
 
   @Override
-  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader() {
+  public <K, E> DatasetReader<MapEntry<K, E>> newMapReader() {
     return new SpecificAvroDaoDatasetReader(dao.getScanner());
   }
 
   @Override
-  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader(K startKey, K stopKey) {
+  public <K, E> DatasetReader<MapEntry<K, E>> newMapReader(K startKey, K stopKey) {
     return new SpecificAvroDaoDatasetReader(dao.getScanner(startKey, stopKey));
   }
 
   @Override
-  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader(MapKey startKey,
+  public <K, E> DatasetReader<MapEntry<K, E>> newMapReader(MapKey startKey,
       MapKey stopKey) {
     return new SpecificAvroDaoDatasetReader(dao.getScanner(GenericAvroDaoDataset
         .toPartialKey(startKey), GenericAvroDaoDataset.toPartialKey(stopKey)));

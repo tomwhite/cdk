@@ -75,23 +75,23 @@ class CompositeAvroDaoDataset implements MapDataset {
   }
 
   @Override
-  public <K, E> MapDatasetWriter<K, E> getMapWriter() {
+  public <K, E> MapDatasetWriter<K, E> newMapWriter() {
     return null;  //To change body of implemented methods use File | Settings | File
     // Templates.
   }
 
   @Override
-  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader() {
+  public <K, E> DatasetReader<MapEntry<K, E>> newMapReader() {
     return null;  //To change body of implemented methods use File | Settings | File Templates.
   }
 
   @Override
-  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader(K startKey, K stopKey) {
+  public <K, E> DatasetReader<MapEntry<K, E>> newMapReader(K startKey, K stopKey) {
     return null;  //To change body of implemented methods use File | Settings | File Templates.
   }
 
   @Override
-  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader(MapKey startKey,
+  public <K, E> DatasetReader<MapEntry<K, E>> newMapReader(MapKey startKey,
       MapKey stopKey) {
     return null;  //To change body of implemented methods use File | Settings | File Templates.
   }

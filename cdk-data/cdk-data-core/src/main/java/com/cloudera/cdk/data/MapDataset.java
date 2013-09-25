@@ -19,12 +19,12 @@ public interface MapDataset extends Dataset {
 
   <K, E> MapDatasetAccessor<K, E> newMapAccessor();
 
-  <K, E> MapDatasetWriter<K, E> getMapWriter();
+  <K, E> MapDatasetWriter<K, E> newMapWriter();
 
-  <K, E> DatasetReader<MapEntry<K, E>> getMapReader();
+  <K, E> DatasetReader<MapEntry<K, E>> newMapReader();
 
-  <K, E> DatasetReader<MapEntry<K, E>> getMapReader(K startKey, K stopKey);
+  <K, E> DatasetReader<MapEntry<K, E>> newMapReader(K startKey, K stopKey);
 
-  <K, E> DatasetReader<MapEntry<K, E>> getMapReader(MapKey startKey, MapKey stopKey);
+  <K, E> DatasetReader<MapEntry<K, E>> newMapReader(MapKey startKey, MapKey stopKey);
 
 }

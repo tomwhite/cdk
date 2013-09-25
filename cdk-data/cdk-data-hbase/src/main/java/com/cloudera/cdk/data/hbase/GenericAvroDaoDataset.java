@@ -71,23 +71,24 @@ class GenericAvroDaoDataset implements MapDataset {
   }
 
   @Override
-  public MapDatasetWriter<GenericRecord, GenericRecord> getMapWriter() {
+  public MapDatasetWriter<GenericRecord, GenericRecord> newMapWriter() {
     return new GenericAvroDaoDatasetWriter(dao.newBatch());
   }
 
   @Override
-  public DatasetReader<MapEntry<GenericRecord, GenericRecord>> getMapReader() {
+  public DatasetReader<MapEntry<GenericRecord, GenericRecord>> newMapReader() {
     return new GenericAvroDaoDatasetReader(dao.getScanner());
   }
 
   @Override
-  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader(K startKey, K stopKey) {
+  public <K, E> DatasetReader<MapEntry<K, E>> newMapReader(K startKey, K stopKey) {
     return (DatasetReader<MapEntry<K, E>>) new GenericAvroDaoDatasetReader(
         dao.getScanner((GenericRecord) startKey, (GenericRecord) stopKey));
   }
 
   @Override
-  public DatasetReader<MapEntry<GenericRecord, GenericRecord>> getMapReader(MapKey startKey,
+  public DatasetReader<MapEntry<GenericRecord, GenericRecord>> newMapReader(MapKey
+      startKey,
       MapKey stopKey) {
     return new GenericAvroDaoDatasetReader(dao.getScanner(toPartialKey(startKey),
         toPartialKey(stopKey)));

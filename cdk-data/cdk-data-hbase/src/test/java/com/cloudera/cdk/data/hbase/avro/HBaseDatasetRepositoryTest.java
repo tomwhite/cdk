@@ -97,7 +97,7 @@ public class HBaseDatasetRepositoryTest {
     accessor.put(createGenericKey(0), createGenericEntity(0));
     accessor.put(createGenericKey(1), createGenericEntity(1));
 
-    MapDatasetWriter<GenericRecord, GenericRecord> writer = ds.getMapWriter();
+    MapDatasetWriter<GenericRecord, GenericRecord> writer = ds.newMapWriter();
     writer.open();
     try {
       for (int i = 2; i < 10; ++i) {
@@ -120,7 +120,7 @@ public class HBaseDatasetRepositoryTest {
 
     // ensure the new entities are what we expect with scan operations
     int cnt = 0;
-    DatasetReader<MapEntry<GenericRecord, GenericRecord>> reader = ds.getMapReader();
+    DatasetReader<MapEntry<GenericRecord, GenericRecord>> reader = ds.newMapReader();
     reader.open();
     try {
       for (MapEntry<GenericRecord, GenericRecord> entry : reader) {
@@ -162,7 +162,7 @@ public class HBaseDatasetRepositoryTest {
     accessor.put(createSpecificKey(0), createSpecificEntity(0));
     accessor.put(createSpecificKey(1), createSpecificEntity(1));
 
-    MapDatasetWriter<TestKey, TestRecord> writer = ds.getMapWriter();
+    MapDatasetWriter<TestKey, TestRecord> writer = ds.newMapWriter();
     writer.open();
     try {
       for (int i = 2; i < 10; ++i) {
@@ -182,7 +182,7 @@ public class HBaseDatasetRepositoryTest {
 
     // ensure the new entities are what we expect with scan operations
     int cnt = 0;
-    DatasetReader<MapEntry<TestKey, TestRecord>> reader = ds.getMapReader();
+    DatasetReader<MapEntry<TestKey, TestRecord>> reader = ds.newMapReader();
     reader.open();
     try {
       for (MapEntry<TestKey, TestRecord> entry : reader) {
