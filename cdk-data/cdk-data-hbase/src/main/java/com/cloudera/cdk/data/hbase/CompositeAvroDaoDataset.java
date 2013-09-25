@@ -13,18 +13,17 @@ import com.cloudera.cdk.data.dao.EntityScanner;
 import com.cloudera.cdk.data.dao.KeyEntity;
 import com.cloudera.cdk.data.spi.AbstractDatasetReader;
 import java.util.Iterator;
-import java.util.Map;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.specific.SpecificRecord;
 
 class CompositeAvroDaoDataset implements Dataset {
-  private Dao<SpecificRecord, Map<String, SpecificRecord>> dao;
+  private Dao<SpecificRecord, SpecificRecord> dao;
   private DatasetDescriptor descriptor;
   private Schema keySchema;
 
 
-  public CompositeAvroDaoDataset(Dao<SpecificRecord, Map<String, SpecificRecord>> dao, DatasetDescriptor descriptor) {
+  public CompositeAvroDaoDataset(Dao<SpecificRecord, SpecificRecord> dao, DatasetDescriptor descriptor) {
     this.dao = dao;
     this.descriptor = descriptor;
     this.keySchema = HBaseMetadataProvider.getKeySchema(descriptor);
@@ -80,9 +79,9 @@ class CompositeAvroDaoDataset implements Dataset {
       public boolean put(E e) {
         // pull out one of the composite fields to act as a key
         // TODO: check that all composite fields have the same key
-        Map<String, SpecificRecord> composite = (Map<String, SpecificRecord>) e;
-        SpecificRecord key = composite.values().iterator().next();
-        return dao.put(key, (Map<String, SpecificRecord>) e);
+        SpecificRecord composite = (SpecificRecord) e;
+        SpecificRecord key = (SpecificRecord) composite.get(0);
+        return dao.put(key, (SpecificRecord) e);
       }
 
       @Override
