@@ -22,10 +22,10 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.specific.SpecificRecord;
 
 class CompositeAvroDaoDataset implements MapDataset {
-  private Dao<SpecificRecord, Map<String, SpecificRecord>> dao;
+  private Dao dao;
   private DatasetDescriptor descriptor;
 
-  public CompositeAvroDaoDataset(Dao<SpecificRecord, Map<String, SpecificRecord>> dao, DatasetDescriptor descriptor) {
+  public CompositeAvroDaoDataset(Dao dao, DatasetDescriptor descriptor) {
     this.dao = dao;
     this.descriptor = descriptor;
   }
@@ -70,44 +70,62 @@ class CompositeAvroDaoDataset implements MapDataset {
 
   @Override
   public <K, E> MapDatasetAccessor<K, E> newMapAccessor() {
-    return null;  //To change body of implemented methods use File | Settings | File
-    // Templates.
+    return new MapDatasetAccessor<K, E>() {
+      @Override
+      public E get(K key) {
+        return (E) dao.get(key);
+      }
+
+      @Override
+      public boolean put(K key, E entity) {
+        return dao.put(key, entity);
+      }
+
+      @Override
+      public long increment(K key, String fieldName, long amount) {
+        return dao.increment(key, fieldName, amount);
+      }
+
+      @Override
+      public void delete(K key) {
+        dao.delete(key);
+      }
+
+      @Override
+      public boolean delete(K key, E entity) {
+        return dao.delete(key, entity);
+      }
+    };
   }
 
   @Override
   public <K, E> MapDatasetWriter<K, E> newMapWriter() {
-    return null;  //To change body of implemented methods use File | Settings | File
-    // Templates.
+    return new CompositeAvroDaoDatasetWriter<K, E>(dao.newBatch());
   }
 
   @Override
   public <K, E> DatasetReader<MapEntry<K, E>> newMapReader() {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
+    return new CompositeAvroDaoDatasetReader<K, E>(dao.getScanner());
   }
 
   @Override
   public <K, E> DatasetReader<MapEntry<K, E>> newMapReader(K startKey, K stopKey) {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
+    return new CompositeAvroDaoDatasetReader(dao.getScanner(startKey, stopKey));
   }
 
   @Override
   public <K, E> DatasetReader<MapEntry<K, E>> newMapReader(MapKey startKey,
       MapKey stopKey) {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
+    return new CompositeAvroDaoDatasetReader(dao.getScanner(GenericAvroDaoDataset
+        .toPartialKey(startKey), GenericAvroDaoDataset.toPartialKey(stopKey)));
   }
 
-  private class SpecificGenericRecord extends GenericData.Record implements SpecificRecord {
-    public SpecificGenericRecord(Schema schema) {
-      super(schema);
-    }
-  }
-
-  private class SpecificAvroDaoDatasetReader<K, E> extends AbstractDatasetReader {
+  private class CompositeAvroDaoDatasetReader<K, E> extends AbstractDatasetReader<MapEntry<K, E>> {
 
     private EntityScanner<K, E> scanner;
     private Iterator<KeyEntity<K, E>> iterator;
 
-    public SpecificAvroDaoDatasetReader(EntityScanner<K, E> scanner) {
+    public CompositeAvroDaoDatasetReader(EntityScanner<K, E> scanner) {
       this.scanner = scanner;
     }
 
@@ -123,8 +141,9 @@ class CompositeAvroDaoDataset implements MapDataset {
     }
 
     @Override
-    public E next() {
-      return iterator.next().getEntity();
+    public MapEntry<K, E> next() {
+      KeyEntity<K, E> keyEntity = iterator.next();
+      return new MapEntry<K, E>(keyEntity.getKey(), keyEntity.getEntity());
     }
 
     @Override
@@ -138,11 +157,11 @@ class CompositeAvroDaoDataset implements MapDataset {
     }
   }
 
-  private class SpecificAvroDaoDatasetWriter<E> implements DatasetWriter<E> {
+  private class CompositeAvroDaoDatasetWriter<K, E> implements MapDatasetWriter<K, E> {
 
     private EntityBatch batch;
 
-    public SpecificAvroDaoDatasetWriter(EntityBatch batch) {
+    public CompositeAvroDaoDatasetWriter(EntityBatch batch) {
       this.batch = batch;
     }
 
@@ -152,10 +171,8 @@ class CompositeAvroDaoDataset implements MapDataset {
     }
 
     @Override
-    public void write(E e) {
-      // the entity contains the key fields so we can use the same GenericRecord
-      // instance as a key
-      batch.put(e, e);
+    public void write(K key, E entity) {
+      batch.put(key, entity);
     }
 
     @Override

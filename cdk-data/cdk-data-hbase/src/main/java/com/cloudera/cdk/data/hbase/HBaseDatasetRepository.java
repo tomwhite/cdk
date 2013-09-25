@@ -55,22 +55,20 @@ public class HBaseDatasetRepository extends AbstractDatasetRepository<MapDataset
       DatasetDescriptor descriptor) {
     // TODO: use descriptor.getFormat() to decide type of DAO (Avro vs. other)
     String entityName = HBaseMetadataProvider.getEntityName(descriptor);
-    if (isSpecific(descriptor)) {
+    if (isComposite(descriptor)) {
+      try {
+        Class<SpecificRecord> entityClass = (Class<SpecificRecord>)
+            Class.forName(descriptor.getSchema().getFullName());
+        Dao<SpecificRecord, SpecificRecord> dao =
+            SpecificAvroDao.buildCompositeDaoWithEntityManager(tablePool, name,
+            entityClass, schemaManager);
+        return new CompositeAvroDaoDataset(dao, descriptor);
+      } catch (ClassNotFoundException e) {
+        throw new DatasetRepositoryException(e);
+      }
+    } else if (isSpecific(descriptor)) {
       SpecificAvroDao dao = new SpecificAvroDao(tablePool, name, entityName, schemaManager);
       return new SpecificAvroDaoDataset(dao, descriptor);
-//    } else if (isComposite(descriptor)) {
-//      try {
-//        List<Class<SpecificRecord>> subEntityClasses = Lists.newArrayList();
-//        for (Schema.Field field : descriptor.getSchema().getFields()) {
-//          subEntityClasses.add((Class<SpecificRecord>) Class.forName(field.schema().getFullName()));
-//        }
-//        Dao<SpecificRecord, Map<String, SpecificRecord>> dao =
-//            SpecificAvroDao.buildCompositeDaoWithEntityManager(tablePool, name,
-//                subEntityClasses, schemaManager);
-//        return new CompositeAvroDaoDataset(dao, descriptor);
-//      } catch (ClassNotFoundException e) {
-//        throw new DatasetRepositoryException(e);
-//      }
     } else {
       GenericAvroDao dao = new GenericAvroDao(tablePool, name, entityName, schemaManager);
       return new GenericAvroDaoDataset(dao, descriptor);

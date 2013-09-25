@@ -15,13 +15,20 @@
  */
 package com.cloudera.cdk.data.hbase.avro;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
+import com.cloudera.cdk.data.DatasetDescriptor;
+import com.cloudera.cdk.data.MapDataset;
+import com.cloudera.cdk.data.MapDatasetAccessor;
+import com.cloudera.cdk.data.dao.Dao;
+import com.cloudera.cdk.data.hbase.HBaseDatasetRepository;
+import com.cloudera.cdk.data.hbase.avro.entities.CompositeRecord;
+import com.cloudera.cdk.data.hbase.avro.entities.SubRecord1;
+import com.cloudera.cdk.data.hbase.avro.entities.SubRecord2;
+import com.cloudera.cdk.data.hbase.avro.entities.TestKey;
 import com.cloudera.cdk.data.hbase.avro.impl.AvroUtils;
+import com.cloudera.cdk.data.hbase.testing.HBaseTestUtils;
 import java.util.Arrays;
-
+import org.apache.avro.generic.GenericRecord;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.After;
@@ -30,12 +37,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.cloudera.cdk.data.dao.Dao;
-import com.cloudera.cdk.data.hbase.avro.entities.CompositeRecord;
-import com.cloudera.cdk.data.hbase.avro.entities.SubRecord1;
-import com.cloudera.cdk.data.hbase.avro.entities.SubRecord2;
-import com.cloudera.cdk.data.hbase.avro.entities.TestKey;
-import com.cloudera.cdk.data.hbase.testing.HBaseTestUtils;
+import static org.junit.Assert.*;
 
 public class CompositeDatasetTest {
 
@@ -84,11 +86,28 @@ public class CompositeDatasetTest {
 
   @Test
   public void testSpecific() throws Exception {
-    // Construct Dao
-    Dao<TestKey, CompositeRecord> dao = SpecificAvroDao.buildCompositeDao(
-        tablePool, tableName, keyString,
-        Arrays.asList(subRecord1String, subRecord2String), TestKey.class,
-        CompositeRecord.class);
+
+    HBaseAdmin hBaseAdmin = new HBaseAdmin(HBaseTestUtils.getConf());
+    HBaseDatasetRepository repo = new HBaseDatasetRepository(hBaseAdmin, tablePool);
+
+    // Create sub-datasets
+    // TODO: should these be automatically created as a part of the composite dataset?
+    repo.create(tableName, new DatasetDescriptor.Builder()
+        .keySchema(keyString)
+        .schema(subRecord1String)
+        .get());
+    repo.create(tableName, new DatasetDescriptor.Builder()
+        .keySchema(keyString)
+        .schema(subRecord2String)
+        .get());
+
+    // Create composite dataset
+    DatasetDescriptor descriptor = new DatasetDescriptor.Builder()
+        .keySchema(keyString)
+        .schema(CompositeRecord.SCHEMA$)
+        .get();
+    MapDataset ds = repo.create(tableName, descriptor);
+    MapDatasetAccessor<TestKey, CompositeRecord> accessor = ds.newMapAccessor();
 
     // Construct records and keys
     TestKey testKey = TestKey.newBuilder().setPart1("1").setPart2("1").build();
@@ -97,14 +116,13 @@ public class CompositeDatasetTest {
         .setField2("field1_2").build();
     SubRecord2 subRecord2 = SubRecord2.newBuilder().setField1("field2_1")
         .setField2("field2_2").build();
-    ;
 
     CompositeRecord compositeRecord = CompositeRecord.newBuilder()
         .setSubRecord1(subRecord1).setSubRecord2(subRecord2).build();
 
     // Test put and get
-    dao.put(testKey, compositeRecord);
-    CompositeRecord returnedCompositeRecord = dao.get(testKey);
+    accessor.put(testKey, compositeRecord);
+    CompositeRecord returnedCompositeRecord = accessor.get(testKey);
     assertEquals("field1_1", returnedCompositeRecord.getSubRecord1()
         .getField1());
     assertEquals("field1_2", returnedCompositeRecord.getSubRecord1()
@@ -115,15 +133,15 @@ public class CompositeDatasetTest {
         .getField2());
 
     // Test OCC
-    assertFalse(dao.put(testKey, compositeRecord));
-    assertTrue(dao.put(testKey, returnedCompositeRecord));
+    assertFalse(accessor.put(testKey, compositeRecord));
+    assertTrue(accessor.put(testKey, returnedCompositeRecord));
 
     // Test null field
     testKey = TestKey.newBuilder().setPart1("1").setPart2("2").build();
     compositeRecord = CompositeRecord.newBuilder().setSubRecord1(subRecord1)
         .build();
-    dao.put(testKey, compositeRecord);
-    compositeRecord = dao.get(testKey);
+    accessor.put(testKey, compositeRecord);
+    compositeRecord = accessor.get(testKey);
     assertEquals(null, compositeRecord.getSubRecord2());
   }
 }
