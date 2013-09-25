@@ -26,7 +26,8 @@ import com.cloudera.cdk.data.DatasetRepository;
  * compatible implementations of current API methods so that implementers don't
  * need to implement deprecated methods.
  */
-public abstract class AbstractDatasetRepository implements DatasetRepository {
+public abstract class AbstractDatasetRepository<D extends Dataset> implements
+    DatasetRepository<D> {
 
   // for detecting call loops; remove these in CDK 0.8.x
   private boolean inGet = false;
@@ -34,7 +35,7 @@ public abstract class AbstractDatasetRepository implements DatasetRepository {
 
   @Deprecated
   @Override
-  public Dataset get(String name) {
+  public D get(String name) {
     // this is for API backward-compatibility
     try {
       this.inGet = true;
@@ -45,7 +46,7 @@ public abstract class AbstractDatasetRepository implements DatasetRepository {
   }
 
   @Override
-  public Dataset load(String name) {
+  public D load(String name) {
     // this is for implementation backward-compatibility
     if (inGet) {
       throw new UnsupportedOperationException(

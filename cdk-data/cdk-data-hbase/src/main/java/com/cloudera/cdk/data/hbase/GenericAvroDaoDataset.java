@@ -1,32 +1,33 @@
 package com.cloudera.cdk.data.hbase;
 
 import com.cloudera.cdk.data.Dataset;
-import com.cloudera.cdk.data.DatasetAccessor;
 import com.cloudera.cdk.data.DatasetDescriptor;
 import com.cloudera.cdk.data.DatasetReader;
 import com.cloudera.cdk.data.DatasetWriter;
-import com.cloudera.cdk.data.FieldPartitioner;
+import com.cloudera.cdk.data.MapDataset;
+import com.cloudera.cdk.data.MapDatasetAccessor;
+import com.cloudera.cdk.data.MapDatasetWriter;
+import com.cloudera.cdk.data.MapEntry;
+import com.cloudera.cdk.data.MapKey;
 import com.cloudera.cdk.data.PartitionKey;
 import com.cloudera.cdk.data.dao.EntityBatch;
 import com.cloudera.cdk.data.dao.EntityScanner;
 import com.cloudera.cdk.data.dao.KeyEntity;
+import com.cloudera.cdk.data.dao.PartialKey;
 import com.cloudera.cdk.data.hbase.avro.GenericAvroDao;
 import com.cloudera.cdk.data.spi.AbstractDatasetReader;
 import java.util.Iterator;
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
+import javax.annotation.Nullable;
 import org.apache.avro.generic.GenericRecord;
 
-class GenericAvroDaoDataset implements Dataset {
+class GenericAvroDaoDataset implements MapDataset {
 
   private final GenericAvroDao dao;
   private DatasetDescriptor descriptor;
-  private Schema keySchema;
 
   public GenericAvroDaoDataset(GenericAvroDao dao, DatasetDescriptor descriptor) {
     this.dao = dao;
     this.descriptor = descriptor;
-    this.keySchema = HBaseMetadataProvider.getKeySchema(descriptor);
   }
 
   @Override
@@ -51,12 +52,12 @@ class GenericAvroDaoDataset implements Dataset {
 
   @Override
   public <E> DatasetWriter<E> getWriter() {
-    return new GenericAvroDaoDatasetWriter(dao.newBatch());
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public <E> DatasetReader<E> getReader() {
-    return new GenericAvroDaoDatasetReader(dao.getScanner());
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -65,53 +66,50 @@ class GenericAvroDaoDataset implements Dataset {
   }
 
   @Override
-  public <E> DatasetAccessor<E> newAccessor() {
-    return new DatasetAccessor<E>() {
-      @Override
-      public E get(PartitionKey key) {
-        return (E) dao.get(toGenericRecord(key));
-      }
-
-      @Override
-      public boolean put(E e) {
-        // the entity contains the key fields so we can use the same GenericRecord
-        // instance as a key
-        return dao.put((GenericRecord) e, (GenericRecord) e);
-      }
-
-      @Override
-      public long increment(PartitionKey key, String fieldName, long amount) {
-        return dao.increment(toGenericRecord(key), fieldName, amount);
-      }
-
-      @Override
-      public void delete(PartitionKey key) {
-        dao.delete(toGenericRecord(key));
-      }
-
-      @Override
-      public boolean delete(PartitionKey key, E entity) {
-        return dao.delete(toGenericRecord(key), (GenericRecord) entity);
-      }
-
-      private GenericRecord toGenericRecord(PartitionKey key) {
-        GenericRecord keyRecord = new GenericData.Record(keySchema);
-        int i = 0;
-        for (FieldPartitioner fp : descriptor.getPartitionStrategy().getFieldPartitioners()) {
-          keyRecord.put(fp.getName(), key.get(i++));
-        }
-        return keyRecord;
-      }
-
-    };
+  public MapDatasetAccessor<GenericRecord, GenericRecord> newMapAccessor() {
+    return dao;
   }
 
-  private class GenericAvroDaoDatasetReader extends AbstractDatasetReader {
+  @Override
+  public MapDatasetWriter<GenericRecord, GenericRecord> getMapWriter() {
+    return new GenericAvroDaoDatasetWriter(dao.newBatch());
+  }
 
-    private EntityScanner<GenericRecord, GenericRecord> scanner;
-    private Iterator<KeyEntity<GenericRecord, GenericRecord>> iterator;
+  @Override
+  public DatasetReader<MapEntry<GenericRecord, GenericRecord>> getMapReader() {
+    return new GenericAvroDaoDatasetReader(dao.getScanner());
+  }
 
-    public GenericAvroDaoDatasetReader(EntityScanner<GenericRecord, GenericRecord> scanner) {
+  @Override
+  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader(K startKey, K stopKey) {
+    return (DatasetReader<MapEntry<K, E>>) new GenericAvroDaoDatasetReader(
+        dao.getScanner((GenericRecord) startKey, (GenericRecord) stopKey));
+  }
+
+  @Override
+  public DatasetReader<MapEntry<GenericRecord, GenericRecord>> getMapReader(MapKey startKey,
+      MapKey stopKey) {
+    return new GenericAvroDaoDatasetReader(dao.getScanner(toPartialKey(startKey),
+        toPartialKey(stopKey)));
+  }
+
+  static <K> PartialKey<K> toPartialKey(@Nullable MapKey<K> mapKey) {
+    if (mapKey == null) {
+      return null;
+    }
+    PartialKey.Builder<K> builder = new PartialKey.Builder<K>();
+    for (MapKey.KeyPartNameValue part : mapKey.getPartList()) {
+      builder.addKeyPart(part.getName(), part.getValue());
+    }
+    return builder.build();
+  }
+
+  private class GenericAvroDaoDatasetReader<K, E> extends AbstractDatasetReader<MapEntry<K, E>> {
+
+    private EntityScanner<K, E> scanner;
+    private Iterator<KeyEntity<K, E>> iterator;
+
+    public GenericAvroDaoDatasetReader(EntityScanner<K, E> scanner) {
       this.scanner = scanner;
     }
 
@@ -127,8 +125,9 @@ class GenericAvroDaoDataset implements Dataset {
     }
 
     @Override
-    public GenericRecord next() {
-      return iterator.next().getEntity();
+    public MapEntry<K, E> next() {
+      KeyEntity<K, E> keyEntity = iterator.next();
+      return new MapEntry<K, E>(keyEntity.getKey(), keyEntity.getEntity());
     }
 
     @Override
@@ -142,7 +141,7 @@ class GenericAvroDaoDataset implements Dataset {
     }
   }
 
-  private class GenericAvroDaoDatasetWriter<E> implements DatasetWriter<E> {
+  private class GenericAvroDaoDatasetWriter implements MapDatasetWriter<GenericRecord, GenericRecord> {
 
     private EntityBatch<GenericRecord, GenericRecord> batch;
 
@@ -156,10 +155,8 @@ class GenericAvroDaoDataset implements Dataset {
     }
 
     @Override
-    public void write(E e) {
-      // the entity contains the key fields so we can use the same GenericRecord
-      // instance as a key
-      batch.put((GenericRecord) e, (GenericRecord) e);
+    public void write(GenericRecord key, GenericRecord value) {
+      batch.put(key, value);
     }
 
     @Override

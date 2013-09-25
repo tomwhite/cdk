@@ -1,11 +1,14 @@
 package com.cloudera.cdk.data.hbase;
 
 import com.cloudera.cdk.data.Dataset;
-import com.cloudera.cdk.data.DatasetAccessor;
 import com.cloudera.cdk.data.DatasetDescriptor;
 import com.cloudera.cdk.data.DatasetReader;
 import com.cloudera.cdk.data.DatasetWriter;
-import com.cloudera.cdk.data.FieldPartitioner;
+import com.cloudera.cdk.data.MapDataset;
+import com.cloudera.cdk.data.MapDatasetAccessor;
+import com.cloudera.cdk.data.MapDatasetWriter;
+import com.cloudera.cdk.data.MapEntry;
+import com.cloudera.cdk.data.MapKey;
 import com.cloudera.cdk.data.PartitionKey;
 import com.cloudera.cdk.data.dao.EntityBatch;
 import com.cloudera.cdk.data.dao.EntityScanner;
@@ -13,20 +16,14 @@ import com.cloudera.cdk.data.dao.KeyEntity;
 import com.cloudera.cdk.data.hbase.avro.SpecificAvroDao;
 import com.cloudera.cdk.data.spi.AbstractDatasetReader;
 import java.util.Iterator;
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRecord;
 
-class SpecificAvroDaoDataset implements Dataset {
+class SpecificAvroDaoDataset implements MapDataset {
   private SpecificAvroDao dao;
   private DatasetDescriptor descriptor;
-  private Schema keySchema;
-
 
   public SpecificAvroDaoDataset(SpecificAvroDao dao, DatasetDescriptor descriptor) {
     this.dao = dao;
     this.descriptor = descriptor;
-    this.keySchema = HBaseMetadataProvider.getKeySchema(descriptor);
   }
 
   @Override
@@ -51,12 +48,12 @@ class SpecificAvroDaoDataset implements Dataset {
 
   @Override
   public <E> DatasetWriter<E> getWriter() {
-    return new SpecificAvroDaoDatasetWriter(dao.newBatch());
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public <E> DatasetReader<E> getReader() {
-    return new SpecificAvroDaoDatasetReader(dao.getScanner());
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -65,47 +62,33 @@ class SpecificAvroDaoDataset implements Dataset {
   }
 
   @Override
-  public <E> DatasetAccessor<E> newAccessor() {
-    return new DatasetAccessor<E>() {
-      @Override
-      public E get(PartitionKey key) {
-        return (E) dao.get(toGenericRecord(key));
-      }
-
-      @Override
-      public boolean put(E e) {
-        // the entity contains the key fields so we can use the same Specific
-        // instance as a key
-        return dao.put(e, e);
-      }
-
-      @Override
-      public long increment(PartitionKey key, String fieldName, long amount) {
-        return dao.increment(toGenericRecord(key), fieldName, amount);
-      }
-
-      @Override
-      public void delete(PartitionKey key) {
-        dao.delete(toGenericRecord(key));
-      }
-
-      @Override
-      public boolean delete(PartitionKey key, E entity) {
-        return dao.delete(toGenericRecord(key), entity);
-      }
-
-      private GenericRecord toGenericRecord(PartitionKey key) {
-        GenericRecord keyRecord = new GenericData.Record(keySchema);
-        int i = 0;
-        for (FieldPartitioner fp : descriptor.getPartitionStrategy().getFieldPartitioners()) {
-          keyRecord.put(fp.getName(), key.get(i++));
-        }
-        return keyRecord;
-      }
-    };
+  public <K, E> MapDatasetAccessor<K, E> newMapAccessor() {
+    return dao;
   }
 
-  private class SpecificAvroDaoDatasetReader<K, E> extends AbstractDatasetReader {
+  @Override
+  public <K, E> MapDatasetWriter<K, E> getMapWriter() {
+    return new SpecificAvroDaoDatasetWriter(dao.newBatch());
+  }
+
+  @Override
+  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader() {
+    return new SpecificAvroDaoDatasetReader(dao.getScanner());
+  }
+
+  @Override
+  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader(K startKey, K stopKey) {
+    return new SpecificAvroDaoDatasetReader(dao.getScanner(startKey, stopKey));
+  }
+
+  @Override
+  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader(MapKey startKey,
+      MapKey stopKey) {
+    return new SpecificAvroDaoDatasetReader(dao.getScanner(GenericAvroDaoDataset
+        .toPartialKey(startKey), GenericAvroDaoDataset.toPartialKey(stopKey)));
+  }
+
+  private class SpecificAvroDaoDatasetReader<K, E> extends AbstractDatasetReader<MapEntry<K, E>> {
 
     private EntityScanner<K, E> scanner;
     private Iterator<KeyEntity<K, E>> iterator;
@@ -126,8 +109,9 @@ class SpecificAvroDaoDataset implements Dataset {
     }
 
     @Override
-    public E next() {
-      return iterator.next().getEntity();
+    public MapEntry<K, E> next() {
+      KeyEntity<K, E> keyEntity = iterator.next();
+      return new MapEntry<K, E>(keyEntity.getKey(), keyEntity.getEntity());
     }
 
     @Override
@@ -141,7 +125,7 @@ class SpecificAvroDaoDataset implements Dataset {
     }
   }
 
-  private class SpecificAvroDaoDatasetWriter<E> implements DatasetWriter<E> {
+  private class SpecificAvroDaoDatasetWriter<K, E> implements MapDatasetWriter<K, E> {
 
     private EntityBatch batch;
 
@@ -155,10 +139,8 @@ class SpecificAvroDaoDataset implements Dataset {
     }
 
     @Override
-    public void write(E e) {
-      // the entity contains the key fields so we can use the same GenericRecord
-      // instance as a key
-      batch.put(e, e);
+    public void write(K key, E entity) {
+      batch.put(key, entity);
     }
 
     @Override

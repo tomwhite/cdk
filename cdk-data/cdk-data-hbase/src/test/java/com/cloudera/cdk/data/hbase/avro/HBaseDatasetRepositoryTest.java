@@ -266,6 +266,9 @@ public class HBaseDatasetRepositoryTest {
     arrayRecordList.add(subRecord);
 
     entity.put("field5", arrayRecordList);
+
+    entity.put("increment", 10L);
+
     return entity;
   }
 

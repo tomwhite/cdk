@@ -4,7 +4,6 @@ import com.cloudera.cdk.data.DatasetDescriptor;
 import com.cloudera.cdk.data.DatasetRepositoryException;
 import com.cloudera.cdk.data.FieldPartitioner;
 import com.cloudera.cdk.data.NoSuchDatasetException;
-import com.cloudera.cdk.data.PartitionStrategy;
 import com.cloudera.cdk.data.dao.Constants;
 import com.cloudera.cdk.data.dao.HBaseCommonException;
 import com.cloudera.cdk.data.dao.SchemaManager;
@@ -38,7 +37,7 @@ public class HBaseMetadataProvider extends AbstractMetadataProvider {
   @Override
   public DatasetDescriptor create(String tableName, DatasetDescriptor descriptor) {
 
-    String keySchemaString = getKeySchema(descriptor).toString(true);
+    String keySchemaString = descriptor.getKeySchema().toString(true);
     String entitySchemaString = descriptor.getSchema().toString(true);
 
     AvroKeyEntitySchemaParser parser = new AvroKeyEntitySchemaParser();
@@ -49,7 +48,6 @@ public class HBaseMetadataProvider extends AbstractMetadataProvider {
         "com.cloudera.cdk.data.hbase.avro.impl.AvroKeyEntitySchemaParser",
         "com.cloudera.cdk.data.hbase.avro.impl.AvroKeySerDe",
         "com.cloudera.cdk.data.hbase.avro.impl.AvroEntitySerDe");
-
 
     try {
       if (!hbaseAdmin.tableExists(tableName)) {
@@ -108,9 +106,10 @@ public class HBaseMetadataProvider extends AbstractMetadataProvider {
 
     String entityName = entityNames.get(0);
 
-    return getDatasetDescriptor(
-        schemaManager.getKeySchema(name, entityName).getRawSchema(),
-        schemaManager.getEntitySchema(name, entityName).getRawSchema());
+    return new DatasetDescriptor.Builder()
+        .keySchema(schemaManager.getKeySchema(name, entityName).getRawSchema())
+        .schema(schemaManager.getEntitySchema(name, entityName).getRawSchema())
+        .get();
   }
 
   @Override
@@ -127,54 +126,4 @@ public class HBaseMetadataProvider extends AbstractMetadataProvider {
     return descriptor.getSchema().getName();
   }
 
-  /*
-   * Use the partition strategy to extract the key fields so that we can create a key
-   * schema.
-   */
-  static Schema getKeySchema(DatasetDescriptor descriptor) {
-    Schema avroRecordSchema;
-    if (HBaseDatasetRepository.isComposite(descriptor)) {
-      // use first field schema for composite schemas
-      avroRecordSchema = descriptor.getSchema().getFields().get(0).schema();
-    } else {
-      avroRecordSchema = descriptor.getSchema();
-    }
-    Schema keySchema = Schema.createRecord(avroRecordSchema.getName(),
-        "Key part of " + avroRecordSchema.getName(),
-        avroRecordSchema.getNamespace(), false);
-    List<Schema.Field> keyFields = Lists.newArrayList();
-    List<String> keyFieldNames = Lists.newArrayList();
-    for (FieldPartitioner fp : descriptor.getPartitionStrategy().getFieldPartitioners()) {
-      keyFieldNames.add(fp.getName());
-    }
-    for (Schema.Field f : avroRecordSchema.getFields()) {
-      if (keyFieldNames.contains(f.name())) {
-        keyFields.add(copy(f));
-      }
-    }
-    keySchema.setFields(keyFields);
-    return keySchema;
-  }
-
-  private static Schema.Field copy(Schema.Field f) {
-    Schema.Field copy = AvroUtils.cloneField(f);
-    // retain mapping properties
-    for (Map.Entry<String,JsonNode> prop : f.getJsonProps().entrySet()) {
-      copy.addProp(prop.getKey(), prop.getValue());
-    }
-    return copy;
-  }
-
-  private static DatasetDescriptor getDatasetDescriptor(String keySchemaString,
-      String entitySchemaString) {
-    Schema keySchema = new Schema.Parser().parse(keySchemaString);
-    PartitionStrategy.Builder partitionStrategyBuilder = new PartitionStrategy.Builder();
-    for (Schema.Field f : keySchema.getFields()) {
-      partitionStrategyBuilder.identity(f.name(), 1); // each key field is a partition field
-    }
-    return new DatasetDescriptor.Builder()
-        .schema(entitySchemaString)
-        .partitionStrategy(partitionStrategyBuilder.get())
-        .get();
-  }
 }

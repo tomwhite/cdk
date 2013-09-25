@@ -15,6 +15,7 @@
  */
 package com.cloudera.cdk.data.hbase;
 
+import com.cloudera.cdk.data.MapDatasetAccessor;
 import com.cloudera.cdk.data.dao.Dao;
 import com.cloudera.cdk.data.dao.EntityBatch;
 import com.cloudera.cdk.data.dao.EntityScanner;
@@ -32,10 +33,11 @@ import org.apache.hadoop.hbase.client.HTablePool;
  * @param <E>
  *          The entity type.
  */
-public class BaseDao<K, E> implements Dao<K, E> {
+public class BaseDao<K, E> implements Dao<K, E>, MapDatasetAccessor<K, E> {
 
   private final EntityMapper<K, E> entityMapper;
   private final HBaseClientTemplate clientTemplate;
+  private final String tableName;
 
   /**
    * Constructor that will internally create an HBaseClientTemplate from the
@@ -54,6 +56,7 @@ public class BaseDao<K, E> implements Dao<K, E> {
       EntityMapper<K, E> entityMapper) {
     this.entityMapper = entityMapper;
     this.clientTemplate = new HBaseClientTemplate(tablePool, tableName);
+    this.tableName = tableName;
   }
 
   /**
@@ -65,6 +68,7 @@ public class BaseDao<K, E> implements Dao<K, E> {
   public BaseDao(BaseDao<K, E> dao) {
     this.clientTemplate = new HBaseClientTemplate(dao.clientTemplate);
     this.entityMapper = dao.entityMapper;
+    this.tableName = dao.tableName;
   }
 
   @Override
@@ -172,5 +176,9 @@ public class BaseDao<K, E> implements Dao<K, E> {
    */
   public EntityMapper<K, E> getEntityMapper() {
     return this.entityMapper;
+  }
+
+  public String getTableName() {
+    return tableName;
   }
 }

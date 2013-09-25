@@ -1,11 +1,14 @@
 package com.cloudera.cdk.data.hbase;
 
 import com.cloudera.cdk.data.Dataset;
-import com.cloudera.cdk.data.DatasetAccessor;
 import com.cloudera.cdk.data.DatasetDescriptor;
 import com.cloudera.cdk.data.DatasetReader;
 import com.cloudera.cdk.data.DatasetWriter;
-import com.cloudera.cdk.data.FieldPartitioner;
+import com.cloudera.cdk.data.MapDataset;
+import com.cloudera.cdk.data.MapDatasetAccessor;
+import com.cloudera.cdk.data.MapDatasetWriter;
+import com.cloudera.cdk.data.MapEntry;
+import com.cloudera.cdk.data.MapKey;
 import com.cloudera.cdk.data.PartitionKey;
 import com.cloudera.cdk.data.dao.Dao;
 import com.cloudera.cdk.data.dao.EntityBatch;
@@ -18,16 +21,13 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.specific.SpecificRecord;
 
-class CompositeAvroDaoDataset implements Dataset {
+class CompositeAvroDaoDataset implements MapDataset {
   private Dao<SpecificRecord, Map<String, SpecificRecord>> dao;
   private DatasetDescriptor descriptor;
-  private Schema keySchema;
-
 
   public CompositeAvroDaoDataset(Dao<SpecificRecord, Map<String, SpecificRecord>> dao, DatasetDescriptor descriptor) {
     this.dao = dao;
     this.descriptor = descriptor;
-    this.keySchema = HBaseMetadataProvider.getKeySchema(descriptor);
   }
 
   @Override
@@ -69,46 +69,31 @@ class CompositeAvroDaoDataset implements Dataset {
   }
 
   @Override
-  public <E> DatasetAccessor<E> newAccessor() {
-    return new DatasetAccessor<E>() {
-      @Override
-      public E get(PartitionKey key) {
-        return (E) dao.get(toSpecificRecord(key));
-      }
+  public <K, E> MapDatasetAccessor<K, E> newMapAccessor() {
+    return null;  //To change body of implemented methods use File | Settings | File
+    // Templates.
+  }
 
-      @Override
-      public boolean put(E e) {
-        // pull out one of the composite fields to act as a key
-        // TODO: check that all composite fields have the same key
-        Map<String, SpecificRecord> composite = (Map<String, SpecificRecord>) e;
-        SpecificRecord key = composite.values().iterator().next();
-        return dao.put(key, (Map<String, SpecificRecord>) e);
-      }
+  @Override
+  public <K, E> MapDatasetWriter<K, E> getMapWriter() {
+    return null;  //To change body of implemented methods use File | Settings | File
+    // Templates.
+  }
 
-      @Override
-      public long increment(PartitionKey key, String fieldName, long amount) {
-        throw new UnsupportedOperationException();
-      }
+  @Override
+  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader() {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
+  }
 
-      @Override
-      public void delete(PartitionKey key) {
-        throw new UnsupportedOperationException();
-      }
+  @Override
+  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader(K startKey, K stopKey) {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
+  }
 
-      @Override
-      public boolean delete(PartitionKey key, E entity) {
-        throw new UnsupportedOperationException();
-      }
-
-      private SpecificRecord toSpecificRecord(PartitionKey key) {
-        SpecificGenericRecord keyRecord = new SpecificGenericRecord(keySchema);
-        int i = 0;
-        for (FieldPartitioner fp : descriptor.getPartitionStrategy().getFieldPartitioners()) {
-          keyRecord.put(fp.getName(), key.get(i++));
-        }
-        return keyRecord;
-      }
-    };
+  @Override
+  public <K, E> DatasetReader<MapEntry<K, E>> getMapReader(MapKey startKey,
+      MapKey stopKey) {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
   }
 
   private class SpecificGenericRecord extends GenericData.Record implements SpecificRecord {
