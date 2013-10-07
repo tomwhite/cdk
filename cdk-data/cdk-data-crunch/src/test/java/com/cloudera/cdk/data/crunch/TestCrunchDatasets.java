@@ -18,6 +18,7 @@ package com.cloudera.cdk.data.crunch;
 import com.cloudera.cdk.data.Dataset;
 import com.cloudera.cdk.data.DatasetDescriptor;
 import com.cloudera.cdk.data.DatasetRepository;
+import com.cloudera.cdk.data.Formats;
 import com.cloudera.cdk.data.MemoryMetadataProvider;
 import com.cloudera.cdk.data.PartitionKey;
 import com.cloudera.cdk.data.PartitionStrategy;
@@ -53,6 +54,26 @@ public class TestCrunchDatasets {
         .schema(USER_SCHEMA).get());
     Dataset outputDataset = repo.create("out", new DatasetDescriptor.Builder()
         .schema(USER_SCHEMA).get());
+
+    // write two files, each of 5 records
+    writeTestUsers(inputDataset, 5, 0);
+    writeTestUsers(inputDataset, 5, 5);
+
+    Pipeline pipeline = new MRPipeline(TestCrunchDatasets.class);
+    PCollection<GenericData.Record> data = pipeline.read(
+        CrunchDatasets.asSource(inputDataset, GenericData.Record.class));
+    pipeline.write(data, CrunchDatasets.asTarget(outputDataset), Target.WriteMode.APPEND);
+    pipeline.run();
+
+    checkTestUsers(outputDataset, 10);
+  }
+
+  @Test
+  public void testGenericParquet() throws IOException {
+    Dataset inputDataset = repo.create("in", new DatasetDescriptor.Builder()
+        .schema(USER_SCHEMA).format(Formats.PARQUET).get());
+    Dataset outputDataset = repo.create("out", new DatasetDescriptor.Builder()
+        .schema(USER_SCHEMA).format(Formats.PARQUET).get());
 
     // write two files, each of 5 records
     writeTestUsers(inputDataset, 5, 0);
