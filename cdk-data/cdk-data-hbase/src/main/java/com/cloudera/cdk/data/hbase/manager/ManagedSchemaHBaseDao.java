@@ -111,4 +111,9 @@ class ManagedSchemaHBaseDao implements ManagedSchemaDao {
   public boolean save(ManagedSchemaKey key, ManagedSchema schema) {
     return managedSchemaDao.put(key, schema);
   }
+
+  @Override
+  public boolean delete(ManagedSchemaKey key, ManagedSchema schema) {
+    return managedSchemaDao.delete(key, schema);
+  }
 }

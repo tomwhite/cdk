@@ -274,6 +274,24 @@ public class DefaultSchemaManager implements SchemaManager {
     }
   }
 
+  @Override
+  public void deleteSchema(String tableName, String entityName) {
+    // We want to make sure the managed schema map has as recent
+    // a copy of the managed schema in HBase as possible.
+    refreshManagedSchemaCache(tableName, entityName);
+
+    ManagedSchema managedSchema = getManagedSchema(tableName, entityName);
+
+    ManagedSchemaKey key = ManagedSchemaKey.newBuilder().setTable(tableName)
+        .setName(entityName).build();
+    if (!managedSchemaDao.delete(key, managedSchema)) {
+      throw new ConcurrentSchemaModificationException(
+          "The schema has been updated concurrently.");
+    }
+
+    getManagedSchemaMap().remove(key);
+  }
+
   /**
    * Update the managedSchemaMap for the entry defined by tableName and
    * entityName.
