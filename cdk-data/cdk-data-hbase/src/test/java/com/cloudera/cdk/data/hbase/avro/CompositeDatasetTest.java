@@ -18,8 +18,7 @@ package com.cloudera.cdk.data.hbase.avro;
 import com.cloudera.cdk.data.Dataset;
 import com.cloudera.cdk.data.DatasetAccessor;
 import com.cloudera.cdk.data.DatasetDescriptor;
-import com.cloudera.cdk.data.PartitionKey;
-import com.cloudera.cdk.data.PartitionStrategy;
+import com.cloudera.cdk.data.Marker;
 import com.cloudera.cdk.data.hbase.HBaseDatasetRepository;
 import com.cloudera.cdk.data.hbase.avro.entities.CompositeEntity;
 import com.cloudera.cdk.data.hbase.avro.entities.SubEntity1;
@@ -99,7 +98,7 @@ public class CompositeDatasetTest {
     // Test put and get
     accessor.put(compositeEntity);
 
-    PartitionKey key = ds.getDescriptor().getPartitionStrategy().partitionKey("1", "1");
+    Marker key = new Marker.Builder().add("part1", "1").add("part2", "1").get();
     CompositeEntity returnedCompositeEntity = accessor.get(key);
     assertNotNull("found entity", returnedCompositeEntity);
     assertEquals("field1_1", returnedCompositeEntity.getSubEntity1().getField1());
@@ -115,7 +114,7 @@ public class CompositeDatasetTest {
     subEntity1 = SubEntity1.newBuilder(subEntity1).setPart2("2").build(); // different key
     compositeEntity = CompositeEntity.newBuilder().setSubEntity1(subEntity1).build();
     accessor.put(compositeEntity);
-    returnedCompositeEntity = accessor.get(ds.getDescriptor().getPartitionStrategy().partitionKey("1", "2"));
+    returnedCompositeEntity = accessor.get(new Marker.Builder().add("part1", "1").add("part2", "2").get());
     assertNull(returnedCompositeEntity.getSubEntity2());
   }
 }
