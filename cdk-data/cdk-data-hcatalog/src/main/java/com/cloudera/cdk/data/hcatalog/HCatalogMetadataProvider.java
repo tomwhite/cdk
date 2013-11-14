@@ -17,15 +17,24 @@
 package com.cloudera.cdk.data.hcatalog;
 
 import com.cloudera.cdk.data.DatasetDescriptor;
+import com.cloudera.cdk.data.FieldPartitioner;
+import com.cloudera.cdk.data.PartitionKey;
+import com.cloudera.cdk.data.PartitionStrategy;
+import com.cloudera.cdk.data.filesystem.impl.Accessor;
 import com.cloudera.cdk.data.spi.AbstractMetadataProvider;
+import com.cloudera.cdk.data.spi.Key;
+import com.cloudera.cdk.data.spi.PartitionListener;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import java.util.Collection;
+import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract class HCatalogMetadataProvider extends AbstractMetadataProvider {
+abstract class HCatalogMetadataProvider extends AbstractMetadataProvider implements
+    PartitionListener {
 
   private static final Logger logger = LoggerFactory
       .getLogger(HCatalogMetadataProvider.class);
@@ -79,4 +88,14 @@ abstract class HCatalogMetadataProvider extends AbstractMetadataProvider {
     return hcat.getAllTables(HiveUtils.DEFAULT_DB);
   }
 
+  @Override
+  @SuppressWarnings("unchecked")
+  public void partitionAdded(String name, Key key) {
+    List<String> partitionValues = Lists.newArrayList();
+    for (FieldPartitioner fp : key.getPartitionStrategy().getFieldPartitioners()) {
+      partitionValues.add(Accessor.getDefault().dirnameForValue(fp,
+          key.getObject(fp.getName())));
+    }
+    hcat.addPartition(HiveUtils.DEFAULT_DB, name, partitionValues);
+  }
 }

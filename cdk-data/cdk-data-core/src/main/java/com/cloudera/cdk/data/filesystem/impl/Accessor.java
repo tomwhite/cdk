@@ -16,6 +16,7 @@
 package com.cloudera.cdk.data.filesystem.impl;
 
 import com.cloudera.cdk.data.DatasetDescriptor;
+import com.cloudera.cdk.data.FieldPartitioner;
 import com.cloudera.cdk.data.filesystem.FileSystemDatasetRepository;
 import com.cloudera.cdk.data.Dataset;
 import com.cloudera.cdk.data.View;
@@ -82,4 +83,6 @@ public abstract class Accessor {
   public abstract Iterable<Path> getPathIterator(View view);
 
   public abstract void ensureExists(DatasetDescriptor descriptor, Configuration conf);
+
+  public abstract <T> String dirnameForValue(FieldPartitioner<?, T> field, T value);
 }

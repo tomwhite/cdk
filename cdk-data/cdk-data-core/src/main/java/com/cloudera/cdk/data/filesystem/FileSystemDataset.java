@@ -27,6 +27,8 @@ import com.cloudera.cdk.data.PartitionStrategy;
 import com.cloudera.cdk.data.View;
 import com.cloudera.cdk.data.impl.Accessor;
 import com.cloudera.cdk.data.spi.AbstractDataset;
+import com.cloudera.cdk.data.spi.Key;
+import com.cloudera.cdk.data.spi.PartitionListener;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -53,6 +55,7 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
   private PartitionKey partitionKey;
 
   private final PartitionStrategy partitionStrategy;
+  private final PartitionListener partitionListener;
 
   private final FileSystemView<E> unbounded;
 
@@ -60,7 +63,8 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
   private final PathConversion convert;
 
   FileSystemDataset(FileSystem fileSystem, Path directory, String name,
-                    DatasetDescriptor descriptor) {
+                    DatasetDescriptor descriptor,
+                    @Nullable PartitionListener partitionListener) {
 
     this.fileSystem = fileSystem;
     this.directory = directory;
@@ -68,6 +72,7 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
     this.descriptor = descriptor;
     this.partitionStrategy =
         descriptor.isPartitioned() ? descriptor.getPartitionStrategy() : null;
+    this.partitionListener = partitionListener;
     this.convert = new PathConversion();
 
     this.unbounded = new FileSystemView<E>(this);
@@ -80,8 +85,9 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
    */
   @Deprecated
   FileSystemDataset(FileSystem fileSystem, Path directory, String name,
-    DatasetDescriptor descriptor, @Nullable PartitionKey partitionKey) {
-    this(fileSystem, directory, name, descriptor);
+    DatasetDescriptor descriptor, @Nullable PartitionKey partitionKey,
+    @Nullable PartitionListener partitionListener) {
+    this(fileSystem, directory, name, descriptor, partitionListener);
     this.partitionKey = partitionKey;
   }
 
@@ -109,6 +115,10 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
 
   Path getDirectory() {
     return directory;
+  }
+
+  PartitionListener getPartitionListener() {
+    return partitionListener;
   }
 
   @Override
@@ -186,6 +196,9 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
       if (!fileSystem.exists(partitionDirectory)) {
         if (allowCreate) {
           fileSystem.mkdirs(partitionDirectory);
+          if (partitionListener != null) {
+            partitionListener.partitionAdded(name, new Key(partitionStrategy, key.getValues()));
+          }
         } else {
           return null;
         }
@@ -206,6 +219,7 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
             .partitionStrategy(subpartitionStrategy)
             .build())
         .partitionKey(key)
+        .partitionListener(partitionListener)
         .build();
   }
 
@@ -261,7 +275,8 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
               .location(p)
               .partitionStrategy(subPartitionStrategy)
               .build())
-          .partitionKey(key);
+          .partitionKey(key)
+          .partitionListener(partitionListener);
 
       partitions.add(builder.<E>build());
     }
@@ -324,6 +339,7 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
     private String name;
     private DatasetDescriptor descriptor;
     private PartitionKey partitionKey;
+    private PartitionListener partitionListener;
 
     public Builder name(String name) {
       this.name = name;
@@ -354,6 +370,11 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
       return this;
     }
 
+    Builder partitionListener(@Nullable PartitionListener partitionListener) {
+      this.partitionListener = partitionListener;
+      return this;
+    }
+
     public <E> FileSystemDataset<E> build() {
       Preconditions.checkState(this.name != null, "No dataset name defined");
       Preconditions.checkState(this.descriptor != null,
@@ -373,7 +394,8 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
 
       Path absoluteDirectory = fileSystem.makeQualified(directory);
       return new FileSystemDataset<E>(
-          fileSystem, absoluteDirectory, name, descriptor, partitionKey);
+          fileSystem, absoluteDirectory, name, descriptor, partitionKey,
+          partitionListener);
     }
   }
 

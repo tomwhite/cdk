@@ -26,6 +26,7 @@ import com.cloudera.cdk.data.PartitionKey;
 import com.cloudera.cdk.data.PartitionStrategy;
 import com.cloudera.cdk.data.filesystem.impl.Accessor;
 import com.cloudera.cdk.data.spi.AbstractDatasetRepository;
+import com.cloudera.cdk.data.spi.PartitionListener;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -222,6 +223,7 @@ public class FileSystemDatasetRepository extends AbstractDatasetRepository {
         .partitionKey(newDescriptor.isPartitioned() ?
             com.cloudera.cdk.data.impl.Accessor.getDefault().newPartitionKey() :
             null)
+        .partitionListener(getPartitionListener())
         .build();
   }
 
@@ -279,6 +281,7 @@ public class FileSystemDatasetRepository extends AbstractDatasetRepository {
         .partitionKey(updatedDescriptor.isPartitioned() ?
             com.cloudera.cdk.data.impl.Accessor.getDefault().newPartitionKey() :
             null)
+        .partitionListener(getPartitionListener())
         .build();
   }
 
@@ -297,6 +300,7 @@ public class FileSystemDatasetRepository extends AbstractDatasetRepository {
         .partitionKey(descriptor.isPartitioned() ?
             com.cloudera.cdk.data.impl.Accessor.getDefault().newPartitionKey() :
             null)
+        .partitionListener(getPartitionListener())
         .build();
 
     logger.debug("Loaded dataset:{}", ds);
@@ -464,6 +468,11 @@ public class FileSystemDatasetRepository extends AbstractDatasetRepository {
    */
   public MetadataProvider getMetadataProvider() {
     return metadataProvider;
+  }
+
+  private PartitionListener getPartitionListener() {
+    return metadataProvider instanceof PartitionListener ?
+        (PartitionListener) metadataProvider : null;
   }
 
   /**

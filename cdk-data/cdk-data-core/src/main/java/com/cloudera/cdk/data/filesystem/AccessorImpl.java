@@ -19,6 +19,7 @@ import com.cloudera.cdk.data.Dataset;
 import com.cloudera.cdk.data.DatasetDescriptor;
 import com.cloudera.cdk.data.DatasetException;
 import com.cloudera.cdk.data.View;
+import com.cloudera.cdk.data.FieldPartitioner;
 import com.cloudera.cdk.data.filesystem.impl.Accessor;
 import java.io.IOException;
 import java.util.List;
@@ -60,5 +61,10 @@ final class AccessorImpl extends Accessor {
   public void ensureExists(
       DatasetDescriptor descriptor, Configuration conf) {
     FileSystemDatasetRepository.ensureExists(descriptor, conf);
+  }
+
+  @Override
+  public <T> String dirnameForValue(FieldPartitioner<?, T> field, T value) {
+    return PathConversion.dirnameForValue(field, value);
   }
 }
