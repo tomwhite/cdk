@@ -15,13 +15,13 @@
  */
 package com.cloudera.cdk.data.hbase;
 
+import com.cloudera.cdk.data.DatasetIOException;
 import java.io.IOException;
 
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.HTablePool;
 
 import com.cloudera.cdk.data.dao.EntityBatch;
-import com.cloudera.cdk.data.dao.HBaseClientException;
 
 public class BaseEntityBatch<E> implements EntityBatch<E> {
   private final HTableInterface table;
@@ -60,7 +60,7 @@ public class BaseEntityBatch<E> implements EntityBatch<E> {
     try {
       table.setWriteBufferSize(writeBufferSize);
     } catch (IOException e) {
-      throw new HBaseClientException("Error flushing commits for table ["
+      throw new DatasetIOException("Error flushing commits for table ["
           + table + "]", e);
     }
   }
@@ -108,7 +108,7 @@ public class BaseEntityBatch<E> implements EntityBatch<E> {
     try {
       table.flushCommits();
     } catch (IOException e) {
-      throw new HBaseClientException("Error flushing commits for table ["
+      throw new DatasetIOException("Error flushing commits for table ["
           + table + "]", e);
     }
   }
@@ -120,7 +120,7 @@ public class BaseEntityBatch<E> implements EntityBatch<E> {
       table.setAutoFlush(true);
       table.close();
     } catch (IOException e) {
-      throw new HBaseClientException("Error closing table [" + table + "]", e);
+      throw new DatasetIOException("Error closing table [" + table + "]", e);
     }
   }
 

@@ -15,6 +15,7 @@
  */
 package com.cloudera.cdk.data.hbase;
 
+import com.cloudera.cdk.data.DatasetIOException;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -26,7 +27,6 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.FilterList;
 
 import com.cloudera.cdk.data.dao.EntityScanner;
-import com.cloudera.cdk.data.dao.HBaseClientException;
 
 /**
  * Base EntityScanner implementation. This EntityScanner will use an
@@ -151,14 +151,14 @@ public class BaseEntityScanner<E> implements EntityScanner<E> {
       try {
         resultScanner = table.getScanner(scan);
       } catch (IOException e) {
-        throw new HBaseClientException("Failed to fetch scanner", e);
+        throw new DatasetIOException("Failed to fetch scanner", e);
       }
     } finally {
       if (table != null) {
         try {
           table.close();
         } catch (IOException e) {
-          throw new HBaseClientException("Error putting table back into pool",
+          throw new DatasetIOException("Error putting table back into pool",
               e);
         }
       }
