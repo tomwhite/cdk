@@ -40,8 +40,10 @@ import javax.annotation.concurrent.NotThreadSafe;
  * @see PartitionStrategy
  * @see FieldPartitioner
  * @see Dataset
+ * @deprecated will be removed in 0.10.0, use {@link Marker} instead
  */
 @NotThreadSafe
+@Deprecated
 public class PartitionKey {
 
   private final Object[] values;
