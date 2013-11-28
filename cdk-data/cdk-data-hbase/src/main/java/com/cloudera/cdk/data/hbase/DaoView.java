@@ -93,7 +93,6 @@ class DaoView<E> extends AbstractRangeView<E> {
     };
   }
 
-  @Override
   public Iterable<View<E>> getCoveringPartitions() {
     // TODO: use HBase InputFormat to construct splits
     throw new UnsupportedOperationException("getCoveringPartitions is not yet "

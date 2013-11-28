@@ -88,7 +88,6 @@ class FileSystemView<E> extends AbstractRangeView<E> {
     return deleted;
   }
 
-  @Override
   @SuppressWarnings("unchecked")
   public Iterable<View<E>> getCoveringPartitions() {
     if (dataset.getDescriptor().isPartitioned()) {
@@ -96,10 +95,12 @@ class FileSystemView<E> extends AbstractRangeView<E> {
           partitionIterator(),
           new Function<Key, View<E>>() {
             @Override
+            @edu.umd.cs.findbugs.annotations.SuppressWarnings(value="BC_UNCONFIRMED_CAST",
+                justification="Cast needed until View methods are public.")
             public View<E> apply(Key key) {
               if (key != null) {
                 // no need for the bounds checks, use dataset.in
-                return dataset.of(key);
+                return ((AbstractRangeView<E>) dataset).of(key);
               } else {
                 throw new DatasetException("[BUG] Null partition");
               }

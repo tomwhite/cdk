@@ -168,8 +168,6 @@ class PartitionedDatasetWriter<E> implements DatasetWriter<E> {
 
     @Override
     public DatasetWriter<E> load(Key key) throws Exception {
-      Preconditions.checkArgument(view.contains(key),
-          "View {} does not contain Key {}", view, key);
       Preconditions.checkState(view.getDataset() instanceof FileSystemDataset,
           "FileSystemWriters cannot create writer for " + view.getDataset());
 

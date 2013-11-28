@@ -37,7 +37,6 @@ public abstract class AbstractDataset<E> implements Dataset<E> {
     return this;
   }
 
-  @Override
   public boolean deleteAll() {
     throw new UnsupportedOperationException(
         "This Dataset does not support deletion");
@@ -55,44 +54,36 @@ public abstract class AbstractDataset<E> implements Dataset<E> {
     return newWriter();
   }
 
-  @Override
   public boolean contains(E key) {
     // A Dataset contains all PartitionKeys, only sub-views have to check
     return true;
   }
 
-  @Override
   public boolean contains(Marker marker) {
     // A Dataset contains all PartitionKeys contained by any Marker
     return true;
   }
 
-  @Override
   public View<E> from(Marker start) {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
-  @Override
   public View<E> fromAfter(Marker start) {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
-  @Override
   public View<E> to(Marker end) {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
-  @Override
   public View<E> toBefore(Marker end) {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
-  @Override
   public View<E> of(Marker partial) {
     throw new UnsupportedOperationException("Not supported yet.");
   }
 
-  @Override
   public Iterable<View<E>> getCoveringPartitions() {
     throw new UnsupportedOperationException("Not supported yet.");
   }

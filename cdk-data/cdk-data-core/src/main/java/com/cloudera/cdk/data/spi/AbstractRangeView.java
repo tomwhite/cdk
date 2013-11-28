@@ -74,13 +74,11 @@ public abstract class AbstractRangeView<E> implements View<E> {
     return dataset;
   }
 
-  @Override
   public boolean deleteAll() {
     throw new UnsupportedOperationException(
         "This Dataset does not support deletion");
   }
 
-  @Override
   public boolean contains(E entity) {
     if (dataset.getDescriptor().isPartitioned()) {
       return range.contains(keys.get().reuseFor(entity));
@@ -89,32 +87,26 @@ public abstract class AbstractRangeView<E> implements View<E> {
     }
   }
 
-  @Override
   public boolean contains(Marker marker) {
     return range.contains(marker);
   }
 
-  @Override
   public View<E> from(Marker start) {
     return newLimitedCopy(range.from(start));
   }
 
-  @Override
   public View<E> fromAfter(Marker start) {
     return newLimitedCopy(range.fromAfter(start));
   }
 
-  @Override
   public View<E> to(Marker end) {
     return newLimitedCopy(range.to(end));
   }
 
-  @Override
   public View<E> toBefore(Marker end) {
     return newLimitedCopy(range.toBefore(end));
   }
 
-  @Override
   public View<E> of(Marker partial) {
     return newLimitedCopy(range.of(partial));
   }

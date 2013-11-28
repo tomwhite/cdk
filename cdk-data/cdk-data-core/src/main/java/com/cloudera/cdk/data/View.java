@@ -55,7 +55,7 @@ public interface View<E> {
    * @throws DatasetIOException
    *          If the requested delete failed because of an IOException
    */
-  boolean deleteAll();
+  //boolean deleteAll();
 
   /**
    * Get an appropriate {@link DatasetReader} implementation based on this
@@ -91,7 +91,7 @@ public interface View<E> {
    * @param key an entity {@code Object}
    * @return true if {@code key} is in the partition space of this view.
    */
-  boolean contains(E key);
+  //boolean contains(E key);
 
   /**
    * Returns whether a {@link Marker} is in this {@code View}
@@ -99,7 +99,7 @@ public interface View<E> {
    * @param marker a {@code Marker}
    * @return true if {@code marker} is in the partition space of this view.
    */
-  boolean contains(Marker marker);
+  //boolean contains(Marker marker);
 
   /**
    * Returns an Iterable of non-overlapping {@link View} objects that partition
@@ -123,7 +123,7 @@ public interface View<E> {
    * @throws IllegalStateException
    *      If the underlying {@code Dataset} is not partitioned.
    */
-  Iterable<View<E>> getCoveringPartitions();
+  //Iterable<View<E>> getCoveringPartitions();
 
   // TODO: should the View factory methods support entities also?
 
@@ -143,7 +143,7 @@ public interface View<E> {
    * @throws IllegalArgumentException If {@code start} is null or not in this
    *                                  {@code View}.
    */
-  View<E> from(Marker start);
+  //View<E> from(Marker start);
 
   /**
    * Creates a sub-{@code View}, from after the {@code start} {@link Marker} to
@@ -161,7 +161,7 @@ public interface View<E> {
    * @throws IllegalArgumentException If {@code start} is null or not in this
    *                                  {@code View}.
    */
-  View<E> fromAfter(Marker start);
+  //View<E> fromAfter(Marker start);
 
   /**
    * Creates a sub-{@code View}, from the start of this {@code View} to the
@@ -179,7 +179,7 @@ public interface View<E> {
    * @throws IllegalArgumentException If {@code end} is null or not in this
    *                                  {@code View}.
    */
-  View<E> to(Marker end);
+  //View<E> to(Marker end);
 
   /**
    * Creates a sub-{@code View}, from the start of this {@code View} to before
@@ -197,7 +197,7 @@ public interface View<E> {
    * @throws IllegalArgumentException If {@code end} is null or not in this
    *                                  {@code View}.
    */
-  View<E> toBefore(Marker end);
+  //View<E> toBefore(Marker end);
 
   /**
    * Creates a sub-{@code View} from the partition space contained by a partial
@@ -234,5 +234,5 @@ public interface View<E> {
    * @throws IllegalArgumentException If {@code partial} is null or not in this
    *                                  {@code View}.
    */
-  View<E> of(Marker partial);
+  //View<E> of(Marker partial);
 }
