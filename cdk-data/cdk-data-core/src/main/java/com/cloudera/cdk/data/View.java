@@ -94,7 +94,7 @@ public interface View<E> {
   //boolean contains(E key);
 
   /**
-   * Returns whether a {@link Marker} is in this {@code View}
+   * Returns whether a {@link com.cloudera.cdk.data.spi.Marker} is in this {@code View}
    *
    * @param marker a {@code Marker}
    * @return true if {@code marker} is in the partition space of this view.
@@ -128,14 +128,14 @@ public interface View<E> {
   // TODO: should the View factory methods support entities also?
 
   /**
-   * Creates a sub-{@code View}, from the {@code start} {@link Marker} to the
+   * Creates a sub-{@code View}, from the {@code start} {@link com.cloudera.cdk.data.spi.Marker} to the
    * end of this {@code View}.
    *
    * The returned View is inclusive: the partition space contained by the start
    * Marker is included.
    *
    * {@code start} must be contained by this {@code View}, as determined by
-   * {@link #contains(com.cloudera.cdk.data.Marker)}.
+   * {@link #contains(com.cloudera.cdk.data.spi.Marker)}.
    *
    * @param start a starting {@code Marker}
    * @return a {@code View} for the range
@@ -146,14 +146,14 @@ public interface View<E> {
   //View<E> from(Marker start);
 
   /**
-   * Creates a sub-{@code View}, from after the {@code start} {@link Marker} to
+   * Creates a sub-{@code View}, from after the {@code start} {@link com.cloudera.cdk.data.spi.Marker} to
    * the end of this {@code View}.
    *
    * The returned View is exclusive: the partition space contained by the start
    * Marker is not included.
    *
    * {@code start} must be contained by this {@code View}, as determined by
-   * {@link #contains(com.cloudera.cdk.data.Marker)}.
+   * {@link #contains(com.cloudera.cdk.data.spi.Marker)}.
    *
    * @param start a starting {@code Marker}
    * @return a {@code View} for the range
@@ -165,13 +165,13 @@ public interface View<E> {
 
   /**
    * Creates a sub-{@code View}, from the start of this {@code View} to the
-   * {@code end} {@link Marker}.
+   * {@code end} {@link com.cloudera.cdk.data.spi.Marker}.
    *
    * The returned View is inclusive: the space contained by the end Marker is
    * included.
    *
    * {@code end} must be contained by this {@code View}, as determined by
-   * {@link #contains(com.cloudera.cdk.data.Marker)}.
+   * {@link #contains(com.cloudera.cdk.data.spi.Marker)}.
    *
    * @param end an ending {@code Marker}
    * @return a {@code View} for the range
@@ -183,13 +183,13 @@ public interface View<E> {
 
   /**
    * Creates a sub-{@code View}, from the start of this {@code View} to before
-   * the {@code end} {@link Marker}.
+   * the {@code end} {@link com.cloudera.cdk.data.spi.Marker}.
    *
    * The returned View is exclusive: the space contained by the end Marker is
    * not included.
    *
    * {@code end} must be contained by this {@code View}, as determined by
-   * {@link #contains(com.cloudera.cdk.data.Marker)}.
+   * {@link #contains(com.cloudera.cdk.data.spi.Marker)}.
    *
    * @param end an ending {@code Marker}
    * @return a {@code View} for the range
@@ -201,7 +201,7 @@ public interface View<E> {
 
   /**
    * Creates a sub-{@code View} from the partition space contained by a partial
-   * {@link Marker}.
+   * {@link com.cloudera.cdk.data.spi.Marker}.
    *
    * The returned View will contain all partitions that match the values from
    * {@code Marker} for a {@link PartitionStrategy}. For example, consider the
@@ -226,7 +226,7 @@ public interface View<E> {
    * </pre>
    *
    * {@code partial} must be contained by this {@code View}, as determined by
-   * {@link #contains(com.cloudera.cdk.data.Marker)}.
+   * {@link #contains(com.cloudera.cdk.data.spi.Marker)}.
    *
    * @param partial a partial {@code Marker}
    * @return a {@code View} of the partition space under {@code partial}.

@@ -21,7 +21,7 @@ import com.cloudera.cdk.data.DatasetException;
 import com.cloudera.cdk.data.DatasetReader;
 import com.cloudera.cdk.data.DatasetWriter;
 import com.cloudera.cdk.data.FieldPartitioner;
-import com.cloudera.cdk.data.Marker;
+import com.cloudera.cdk.data.spi.Marker;
 import com.cloudera.cdk.data.PartitionKey;
 import com.cloudera.cdk.data.PartitionStrategy;
 import com.cloudera.cdk.data.View;
@@ -176,8 +176,8 @@ class FileSystemDataset<E> extends AbstractDataset<E> {
       "Attempt to get a partition on a non-partitioned dataset (name:%s)",
       name);
 
-    logger.debug("Loading partition for key {}, allowCreate:{}", new Object[] {
-      key, allowCreate });
+    logger.debug("Loading partition for key {}, allowCreate:{}", new Object[]{
+        key, allowCreate});
 
     Path partitionDirectory = fileSystem.makeQualified(
         toDirectoryName(directory, key));

@@ -18,7 +18,6 @@ package com.cloudera.cdk.data.spi;
 
 import com.cloudera.cdk.data.Dataset;
 import com.cloudera.cdk.data.DatasetDescriptor;
-import com.cloudera.cdk.data.Marker;
 import com.cloudera.cdk.data.View;
 import com.google.common.base.Objects;
 

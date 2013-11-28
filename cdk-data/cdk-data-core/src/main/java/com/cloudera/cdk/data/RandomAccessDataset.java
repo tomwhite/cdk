@@ -15,6 +15,7 @@
  */
 package com.cloudera.cdk.data;
 
+import com.cloudera.cdk.data.spi.Marker;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -35,7 +36,7 @@ public interface RandomAccessDataset<E> extends Dataset<E> {
   
   /**
    * Return the entity stored in the dataset at the row specified with {@link
-   * Marker} <code>key</code>. Return null if no such entity exists.
+   * com.cloudera.cdk.data.spi.Marker} <code>key</code>. Return null if no such entity exists.
    *
    * @param key
    *          The key of the entity to get

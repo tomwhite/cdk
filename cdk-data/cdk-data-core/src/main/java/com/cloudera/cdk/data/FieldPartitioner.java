@@ -15,6 +15,7 @@
  */
 package com.cloudera.cdk.data;
 
+import com.cloudera.cdk.data.spi.Marker;
 import com.google.common.base.Function;
 import java.util.Comparator;
 import javax.annotation.Nullable;
@@ -105,13 +106,13 @@ public abstract class FieldPartitioner<S, T> implements Function<S, T>, Comparat
   public abstract T apply(S value);
 
   /**
-   * Return the value of this field for the given {@link Marker}.
+   * Return the value of this field for the given {@link com.cloudera.cdk.data.spi.Marker}.
    *
    * If the {@code Marker} has a value for this field's name, that value is
-   * returned using {@link Marker#getAs(java.lang.String, java.lang.Class)}. If
+   * returned using {@link com.cloudera.cdk.data.spi.Marker#getAs(java.lang.String, java.lang.Class)}. If
    * the {@code Marker} only has a value for the the source field name, then
    * that value is retrieved using
-   * {@link Marker#getAs(java.lang.String, java.lang.Class)} and this field's
+   * {@link com.cloudera.cdk.data.spi.Marker#getAs(java.lang.String, java.lang.Class)} and this field's
    * transformation is applied to it as the source value.
    *
    * @param marker a {@code Marker}
