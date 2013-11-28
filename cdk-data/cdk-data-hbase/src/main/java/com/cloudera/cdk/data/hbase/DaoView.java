@@ -116,7 +116,7 @@ class DaoView<E> extends AbstractRangeView<E> {
 
     for (int i = 0, n = partitioners.size(); i < n; i += 1) {
       final FieldPartitioner fp = partitioners.get(i);
-      values[i] = fp.valueFor(marker);
+      values[i] = marker.valueFor(fp);
     }
 
     return strategy.partitionKey(values);
