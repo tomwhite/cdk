@@ -185,7 +185,7 @@ public class VersionedAvroEntityMapper<ENTITY extends IndexedRecord> implements
         version = schemaManager.getEntityVersion(tableName, entityName,
             entitySchema);
       } catch (ClassNotFoundException e) {
-        String msg = "Key or entity class not found. Make sure the specific "
+        String msg = "CompleteKey or entity class not found. Make sure the specific "
             + "record instances are on the classpath.";
         LOG.error(msg, e);
         throw new DatasetException(msg, e);

@@ -99,16 +99,16 @@ public abstract class EntityScannerBuilder<E> {
   }
 
   /**
-   * Get The Start Key
+   * Get The Start CompleteKey
    * 
-   * @return Key
+   * @return CompleteKey
    */
   PartitionKey getStartKey() {
     return startKey;
   }
 
   /**
-   * Set The Start Key.
+   * Set The Start CompleteKey.
    * 
    * @param startKey
    *          The start key for this scan
@@ -120,16 +120,16 @@ public abstract class EntityScannerBuilder<E> {
   }
 
   /**
-   * Get The Start Key
+   * Get The Start CompleteKey
    * 
-   * @return Key
+   * @return CompleteKey
    */
   PartitionKey getStopKey() {
     return stopKey;
   }
 
   /**
-   * Set The Stop Key.
+   * Set The Stop CompleteKey.
    * 
    * @param stopKey
    *          The stop key for this scan

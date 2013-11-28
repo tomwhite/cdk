@@ -37,11 +37,11 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /**
- * A Key is a Marker that is complete for a PartitionStrategy.
+ * A CompleteKey is a Marker that is complete for a PartitionStrategy.
  *
  * @since 0.9.0
  */
-public class Key extends Marker implements Comparable<Key> {
+public class CompleteKey extends Marker implements Comparable<CompleteKey> {
 
   // Cache the field to index mappings for each PartitionStrategy
   private static final LoadingCache<PartitionStrategy, Map<String, Integer>>
@@ -63,29 +63,29 @@ public class Key extends Marker implements Comparable<Key> {
   final Map<String, Integer> fields;
   List<Object> values;
 
-  public Key(PartitionStrategy strategy) {
+  public CompleteKey(PartitionStrategy strategy) {
     this(strategy, Arrays.asList(
         new Object[strategy.getFieldPartitioners().size()]));
   }
 
-  public Key(PartitionStrategy strategy, Marker marker) {
+  public CompleteKey(PartitionStrategy strategy, Marker marker) {
     this(strategy);
     reuseFor(marker);
   }
 
-  public Key(PartitionStrategy strategy, List<Object> values) {
+  public CompleteKey(PartitionStrategy strategy, List<Object> values) {
     try {
       this.fields = FIELD_CACHE.get(strategy);
     } catch (ExecutionException ex) {
       throw new RuntimeException("[BUG] Could not get field map");
     }
     Preconditions.checkArgument(values.size() == fields.size(),
-        "Not enough values for a complete Key");
+        "Not enough values for a complete CompleteKey");
     this.strategy = strategy;
     this.values = values;
   }
 
-  public Key(PartitionStrategy strategy, Object entity) {
+  public CompleteKey(PartitionStrategy strategy, Object entity) {
     this(strategy);
     reuseFor(entity);
   }
@@ -139,30 +139,30 @@ public class Key extends Marker implements Comparable<Key> {
   }
 
   /**
-   * Replaces all of the values in this {@link Key} with the given List.
+   * Replaces all of the values in this {@link CompleteKey} with the given List.
    *
    * @param values a List of values
    */
   public void replaceValues(List<Object> values) {
     Preconditions.checkArgument(values != null, "Values cannot be null");
     Preconditions.checkArgument(values.size() == fields.size(),
-        "Not enough values for a complete Key");
+        "Not enough values for a complete CompleteKey");
     this.values = values;
   }
 
   /**
-   * Replaces all of the values in this {@link Key} with values from the given
+   * Replaces all of the values in this {@link CompleteKey} with values from the given
    * {@link Marker}.
    *
-   * @param marker a {@code Marker} to reuse this {@code Key} for
-   * @return this updated {@code Key}
+   * @param marker a {@code Marker} to reuse this {@code CompleteKey} for
+   * @return this updated {@code CompleteKey}
    * @throws IllegalStateException
    *      If the {@code Marker} cannot be used to produce a value for each
    *      field in the {@code PartitionStrategy}
    *
    * @since 0.9.0
    */
-  public Key reuseFor(Marker marker) {
+  public CompleteKey reuseFor(Marker marker) {
     final List<FieldPartitioner> partitioners = strategy.getFieldPartitioners();
 
     for (int i = 0; i < partitioners.size(); i += 1) {
@@ -180,11 +180,11 @@ public class Key extends Marker implements Comparable<Key> {
   }
 
   /**
-   * Replaces all of the values in this {@link Key} with values from the given
+   * Replaces all of the values in this {@link CompleteKey} with values from the given
    * {@code entity}.
    *
-   * @param entity an entity to reuse this {@code Key} for
-   * @return this updated {@code Key}
+   * @param entity an entity to reuse this {@code CompleteKey} for
+   * @return this updated {@code CompleteKey}
    * @throws IllegalStateException
    *      If the {@code entity} cannot be used to produce a value for each
    *      field in the {@code PartitionStrategy}
@@ -192,7 +192,7 @@ public class Key extends Marker implements Comparable<Key> {
    * @since 0.9.0
    */
   @SuppressWarnings("unchecked")
-  public Key reuseFor(Object entity) {
+  public CompleteKey reuseFor(Object entity) {
     final List<FieldPartitioner> partitioners = strategy.getFieldPartitioners();
 
     for (int i = 0; i < partitioners.size(); i++) {
@@ -226,9 +226,9 @@ public class Key extends Marker implements Comparable<Key> {
 
   @Override
   @SuppressWarnings("unchecked")
-  public int compareTo(Key other) {
+  public int compareTo(CompleteKey other) {
     if (other == null) {
-      throw new NullPointerException("Cannot compare a Key with null");
+      throw new NullPointerException("Cannot compare a CompleteKey with null");
     } else if (!strategy.equals(other.strategy)) {
       throw new RuntimeException("PartitionStrategy does not match");
     }
@@ -251,8 +251,8 @@ public class Key extends Marker implements Comparable<Key> {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof Key) {
-      return Objects.equal(values, ((Key) obj).values);
+    if (obj instanceof CompleteKey) {
+      return Objects.equal(values, ((CompleteKey) obj).values);
     } else {
       return false;
     }

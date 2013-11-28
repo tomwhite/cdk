@@ -17,10 +17,9 @@ package com.cloudera.cdk.data.filesystem;
 
 import com.cloudera.cdk.data.DatasetDescriptor;
 import com.cloudera.cdk.data.DatasetWriter;
-import com.cloudera.cdk.data.DatasetWriterException;
 import com.cloudera.cdk.data.PartitionStrategy;
 import com.cloudera.cdk.data.View;
-import com.cloudera.cdk.data.spi.Key;
+import com.cloudera.cdk.data.spi.CompleteKey;
 import com.cloudera.cdk.data.spi.ReaderWriterState;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -34,9 +33,6 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
-
 class PartitionedDatasetWriter<E> implements DatasetWriter<E> {
 
   private static final Logger logger = LoggerFactory
@@ -46,9 +42,9 @@ class PartitionedDatasetWriter<E> implements DatasetWriter<E> {
   private int maxWriters;
 
   private final PartitionStrategy partitionStrategy;
-  private LoadingCache<Key, DatasetWriter<E>> cachedWriters;
+  private LoadingCache<CompleteKey, DatasetWriter<E>> cachedWriters;
 
-  private final Key reusedKey;
+  private final CompleteKey reusedKey;
 
   private ReaderWriterState state;
 
@@ -61,16 +57,16 @@ class PartitionedDatasetWriter<E> implements DatasetWriter<E> {
     this.partitionStrategy = descriptor.getPartitionStrategy();
     this.maxWriters = Math.min(10, partitionStrategy.getCardinality());
     this.state = ReaderWriterState.NEW;
-    this.reusedKey = new Key(partitionStrategy);
+    this.reusedKey = new CompleteKey(partitionStrategy);
   }
 
   @Override
   public void open() {
     Preconditions.checkState(state.equals(ReaderWriterState.NEW),
-      "Unable to open a writer from state:%s", state);
+        "Unable to open a writer from state:%s", state);
 
     logger.debug("Opening partitioned dataset writer w/strategy:{}",
-      partitionStrategy);
+        partitionStrategy);
 
     cachedWriters = CacheBuilder.newBuilder().maximumSize(maxWriters)
       .removalListener(new DatasetWriterCloser<E>())
@@ -89,7 +85,7 @@ class PartitionedDatasetWriter<E> implements DatasetWriter<E> {
     DatasetWriter<E> writer = cachedWriters.getIfPresent(reusedKey);
     if (writer == null) {
       // get a new key because it is stored in the cache
-      Key key = new Key(partitionStrategy, reusedKey);
+      CompleteKey key = new CompleteKey(partitionStrategy, reusedKey);
       try {
         writer = cachedWriters.getUnchecked(key);
       } catch (UncheckedExecutionException ex) {
@@ -156,7 +152,7 @@ class PartitionedDatasetWriter<E> implements DatasetWriter<E> {
   }
 
   private static class DatasetWriterCacheLoader<E> extends
-    CacheLoader<Key, DatasetWriter<E>> {
+    CacheLoader<CompleteKey, DatasetWriter<E>> {
 
     private final View<E> view;
     private final PathConversion convert;
@@ -167,7 +163,7 @@ class PartitionedDatasetWriter<E> implements DatasetWriter<E> {
     }
 
     @Override
-    public DatasetWriter<E> load(Key key) throws Exception {
+    public DatasetWriter<E> load(CompleteKey key) throws Exception {
       Preconditions.checkState(view.getDataset() instanceof FileSystemDataset,
           "FileSystemWriters cannot create writer for " + view.getDataset());
 
@@ -185,11 +181,11 @@ class PartitionedDatasetWriter<E> implements DatasetWriter<E> {
   }
 
   private static class DatasetWriterCloser<E> implements
-    RemovalListener<Key, DatasetWriter<E>> {
+    RemovalListener<CompleteKey, DatasetWriter<E>> {
 
     @Override
     public void onRemoval(
-      RemovalNotification<Key, DatasetWriter<E>> notification) {
+      RemovalNotification<CompleteKey, DatasetWriter<E>> notification) {
 
       DatasetWriter<E> writer = notification.getValue();
 

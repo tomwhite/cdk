@@ -22,7 +22,7 @@ import com.cloudera.cdk.data.partition.HourFieldPartitioner;
 import com.cloudera.cdk.data.partition.MinuteFieldPartitioner;
 import com.cloudera.cdk.data.partition.MonthFieldPartitioner;
 import com.cloudera.cdk.data.spi.Conversions;
-import com.cloudera.cdk.data.spi.Key;
+import com.cloudera.cdk.data.spi.CompleteKey;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -35,7 +35,7 @@ import java.util.Map;
 
 class PathConversion {
 
-  public Key toKey(Path fromPath, Key storage) {
+  public CompleteKey toKey(Path fromPath, CompleteKey storage) {
     final List<FieldPartitioner> partitioners =
         storage.getPartitionStrategy().getFieldPartitioners();
     final List<Object> values = Lists.newArrayList(
@@ -57,7 +57,7 @@ class PathConversion {
     return storage;
   }
 
-  public Path fromKey(Key key) {
+  public Path fromKey(CompleteKey key) {
     final StringBuilder pathBuilder = new StringBuilder();
     final List<FieldPartitioner> partitioners =
         key.getPartitionStrategy().getFieldPartitioners();
