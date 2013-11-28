@@ -18,7 +18,7 @@ package com.cloudera.cdk.data.hbase.avro;
 import com.cloudera.cdk.data.DatasetDescriptor;
 import com.cloudera.cdk.data.DatasetReader;
 import com.cloudera.cdk.data.DatasetWriter;
-import com.cloudera.cdk.data.spi.Marker;
+import com.cloudera.cdk.data.Key;
 import com.cloudera.cdk.data.RandomAccessDataset;
 import com.cloudera.cdk.data.hbase.HBaseDatasetRepository;
 import com.cloudera.cdk.data.hbase.avro.entities.ArrayRecord;
@@ -119,7 +119,7 @@ public class HBaseDatasetRepositoryTest {
     // ensure the new entities are what we expect with get operations
     for (int i = 0; i < 10; ++i) {
       String iStr = Long.toString(i);
-      Marker key = new Marker.Builder()
+      Key key = new Key.Builder(ds)
           .add("part1", "part1_" + iStr)
           .add("part2", "part2_" + iStr).build();
       compareEntitiesWithUtf8(i, ds.get(key));
@@ -159,7 +159,7 @@ public class HBaseDatasetRepositoryTest {
 //      reader.close();
 //    }
 
-    Marker key = new Marker.Builder()
+    Key key = new Key.Builder(ds)
         .add("part1", "part1_5")
         .add("part2", "part2_5").build();
 
@@ -197,7 +197,7 @@ public class HBaseDatasetRepositoryTest {
     // ensure the new entities are what we expect with get operations
     for (int i = 0; i < 10; ++i) {
       String iStr = Long.toString(i);
-      Marker key = new Marker.Builder()
+      Key key = new Key.Builder(ds)
           .add("part1", "part1_" + iStr)
           .add("part2", "part2_" + iStr).build();
       compareEntitiesWithString(i, ds.get(key));
@@ -217,7 +217,7 @@ public class HBaseDatasetRepositoryTest {
       reader.close();
     }
 
-    Marker key = new Marker.Builder()
+    Key key = new Key.Builder(ds)
         .add("part1", "part1_5")
         .add("part2", "part2_5").build();
 
@@ -243,7 +243,7 @@ public class HBaseDatasetRepositoryTest {
 
     // Retrieve the entity
     String iStr = Long.toString(0);
-    Marker key = new Marker.Builder()
+    Key key = new Key.Builder(ds)
         .add("part1", "part1_" + iStr)
         .add("part2", "part2_" + iStr).build();
     compareEntitiesWithUtf8(0, ds.get(key));

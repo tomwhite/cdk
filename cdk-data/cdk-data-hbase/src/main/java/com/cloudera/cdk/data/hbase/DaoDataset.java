@@ -20,6 +20,7 @@ import com.cloudera.cdk.data.DatasetDescriptor;
 import com.cloudera.cdk.data.DatasetReader;
 import com.cloudera.cdk.data.DatasetWriter;
 import com.cloudera.cdk.data.FieldPartitioner;
+import com.cloudera.cdk.data.Key;
 import com.cloudera.cdk.data.spi.Marker;
 import com.cloudera.cdk.data.PartitionKey;
 import com.cloudera.cdk.data.PartitionStrategy;
@@ -29,6 +30,7 @@ import com.cloudera.cdk.data.hbase.impl.Dao;
 import com.cloudera.cdk.data.spi.AbstractDataset;
 import com.google.common.base.Preconditions;
 
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,7 +132,7 @@ class DaoDataset<E> extends AbstractDataset<E> implements RandomAccessDataset<E>
 
   @Override
   @SuppressWarnings("deprecation")
-  public E get(Marker key) {
+  public E get(Key key) {
     return dao.get(keyFor(getDescriptor().getPartitionStrategy(), key));
   }
 
@@ -141,13 +143,13 @@ class DaoDataset<E> extends AbstractDataset<E> implements RandomAccessDataset<E>
 
   @Override
   @SuppressWarnings("deprecation")
-  public long increment(Marker key, String fieldName, long amount) {
+  public long increment(Key key, String fieldName, long amount) {
     return dao.increment(keyFor(getDescriptor().getPartitionStrategy(), key), fieldName, amount);
   }
 
   @Override
   @SuppressWarnings("deprecation")
-  public void delete(Marker key) {
+  public void delete(Key key) {
     dao.delete(keyFor(getDescriptor().getPartitionStrategy(), key));
   }
 
@@ -157,15 +159,26 @@ class DaoDataset<E> extends AbstractDataset<E> implements RandomAccessDataset<E>
   }
 
   @Deprecated
-  static PartitionKey keyFor(PartitionStrategy strategy, Marker marker) {
+  static PartitionKey keyFor(PartitionStrategy strategy, Key key) {
     final List<FieldPartitioner> partitioners = strategy.getFieldPartitioners();
     final Object[] values = new Object[partitioners.size()];
 
     for (int i = 0, n = partitioners.size(); i < n; i += 1) {
       final FieldPartitioner fp = partitioners.get(i);
-      values[i] = fp.valueFor(marker);
+      values[i] = valueFor(fp, key);
     }
 
     return strategy.partitionKey(values);
+  }
+
+  @Nullable
+  static Object valueFor(FieldPartitioner fp, Key key) {
+    if (key.has(fp.getName())) {
+      return key.get(fp.getName());
+    } else if (key.has(fp.getSourceName())) {
+      return fp.apply(key.get(fp.getSourceName()));
+    } else {
+      return null;
+    }
   }
 }
