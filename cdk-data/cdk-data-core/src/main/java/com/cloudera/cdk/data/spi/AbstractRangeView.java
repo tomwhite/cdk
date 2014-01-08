@@ -36,7 +36,8 @@ import javax.annotation.concurrent.Immutable;
 public abstract class AbstractRangeView<E> implements View<E> {
 
   protected final Dataset<E> dataset;
-  protected final MarkerRange range;
+  protected final MarkerComparator comparator;
+  protected final RangePredicate predicate;
 
   // This class is Immutable and must be thread-safe
   protected final ThreadLocal<Key> keys;
@@ -45,29 +46,31 @@ public abstract class AbstractRangeView<E> implements View<E> {
     this.dataset = dataset;
     final DatasetDescriptor descriptor = dataset.getDescriptor();
     if (descriptor.isPartitioned()) {
-      this.range = new MarkerRange(new MarkerComparator(
-          descriptor.getPartitionStrategy()));
+      this.comparator = new MarkerComparator(descriptor.getPartitionStrategy());
       this.keys = new ThreadLocal<Key>() {
         @Override
         protected Key initialValue() {
           return new Key(descriptor.getPartitionStrategy());
         }
       };
+      this.predicate = RangePredicates.all(comparator);
     } else {
       // use UNDEFINED, which handles inappropriate calls to range methods
-      this.range = MarkerRange.UNDEFINED;
       this.keys = null; // not used
+      this.comparator = null;
+      this.predicate = RangePredicates.undefined();
     }
   }
 
-  protected AbstractRangeView(AbstractRangeView<E> view, MarkerRange range) {
+  protected AbstractRangeView(AbstractRangeView<E> view, RangePredicate predicate) {
     this.dataset = view.dataset;
-    this.range = range;
+    this.comparator = view.comparator;
+    this.predicate = predicate;
     // thread-safe, so okay to reuse when views share a partition strategy
     this.keys = view.keys;
   }
 
-  protected abstract AbstractRangeView<E> newLimitedCopy(MarkerRange subRange);
+  protected abstract AbstractRangeView<E> filter(RangePredicate p);
 
   @Override
   public Dataset<E> getDataset() {
@@ -83,7 +86,7 @@ public abstract class AbstractRangeView<E> implements View<E> {
   @Override
   public boolean contains(E entity) {
     if (dataset.getDescriptor().isPartitioned()) {
-      return range.contains(keys.get().reuseFor(entity));
+      return predicate.apply(keys.get().reuseFor(entity));
     } else {
       return true;
     }
@@ -91,32 +94,33 @@ public abstract class AbstractRangeView<E> implements View<E> {
 
   @Override
   public boolean contains(Marker marker) {
-    return range.contains(marker);
+    return predicate.apply(marker);
   }
 
   @Override
   public View<E> from(Marker start) {
-    return newLimitedCopy(range.from(start));
+    return filter(RangePredicates.and(predicate, RangePredicates.from(comparator, start)));
   }
 
   @Override
   public View<E> fromAfter(Marker start) {
-    return newLimitedCopy(range.fromAfter(start));
+    return filter(RangePredicates.and(predicate, RangePredicates.fromAfter(comparator,
+        start)));
   }
 
   @Override
   public View<E> to(Marker end) {
-    return newLimitedCopy(range.to(end));
+    return filter(RangePredicates.and(predicate, RangePredicates.to(comparator, end)));
   }
 
   @Override
   public View<E> toBefore(Marker end) {
-    return newLimitedCopy(range.toBefore(end));
+    return filter(RangePredicates.and(predicate, RangePredicates.toBefore(comparator, end)));
   }
 
   @Override
   public View<E> of(Marker partial) {
-    return newLimitedCopy(range.of(partial));
+    return filter(RangePredicates.and(predicate, RangePredicates.of(comparator, partial)));
   }
 
   @Override
@@ -131,19 +135,19 @@ public abstract class AbstractRangeView<E> implements View<E> {
 
     AbstractRangeView that = (AbstractRangeView) o;
     return (Objects.equal(this.dataset, that.dataset) &&
-        Objects.equal(this.range, that.range));
+        Objects.equal(this.predicate, that.predicate));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(getClass(), dataset, range);
+    return Objects.hashCode(getClass(), dataset, predicate);
   }
 
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
         .add("dataset", dataset)
-        .add("range", range)
+        .add("predicate", predicate)
         .toString();
   }
 }

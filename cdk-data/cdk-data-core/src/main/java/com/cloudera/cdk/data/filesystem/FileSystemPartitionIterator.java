@@ -20,7 +20,7 @@ import com.cloudera.cdk.data.DatasetException;
 import com.cloudera.cdk.data.FieldPartitioner;
 import com.cloudera.cdk.data.PartitionStrategy;
 import com.cloudera.cdk.data.spi.Key;
-import com.cloudera.cdk.data.spi.MarkerRange;
+import com.cloudera.cdk.data.spi.RangePredicate;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -46,6 +46,18 @@ class FileSystemPartitionIterator implements Iterator<Key>, Iterable<Key> {
   private final FileSystem fs;
   private final Path rootDirectory;
   private final Iterator<Key> iterator;
+
+  private static class KeyPredicate implements Predicate<Key> {
+    private final RangePredicate predicate;
+
+    public KeyPredicate(RangePredicate predicate) {
+      this.predicate = predicate;
+    }
+
+    @Override public boolean apply(Key key) {
+      return predicate.apply(key);
+    }
+  }
 
   class FileSystemIterator extends MultiLevelIterator<String> {
     public FileSystemIterator(int depth) throws IOException {
@@ -74,22 +86,6 @@ class FileSystemPartitionIterator implements Iterator<Key>, Iterable<Key> {
       }
 
       return dirs;
-    }
-  }
-
-  /**
-   * Predicate to determine whether a {@link Key} is in a {@link MarkerRange}.
-   */
-  private static class InRange implements Predicate<Key> {
-    private final MarkerRange range;
-
-    public InRange(MarkerRange range) {
-      this.range = range;
-    }
-
-    @Override
-    public boolean apply(Key key) {
-      return range.contains(key);
     }
   }
 
@@ -123,7 +119,8 @@ class FileSystemPartitionIterator implements Iterator<Key>, Iterable<Key> {
   }
 
   FileSystemPartitionIterator(
-      FileSystem fs, Path root, PartitionStrategy strategy, MarkerRange range)
+      FileSystem fs, Path root, PartitionStrategy strategy,
+      final RangePredicate predicate)
       throws IOException {
     Preconditions.checkArgument(fs.isDirectory(root));
     this.fs = fs;
@@ -132,7 +129,7 @@ class FileSystemPartitionIterator implements Iterator<Key>, Iterable<Key> {
         Iterators.transform(
             new FileSystemIterator(strategy.getFieldPartitioners().size()),
             new MakeKey(strategy)),
-        new InRange(range));
+        new KeyPredicate(predicate));
   }
 
   @Override

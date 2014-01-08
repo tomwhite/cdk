@@ -17,16 +17,13 @@ package com.cloudera.cdk.data.hbase;
 
 import com.cloudera.cdk.data.DatasetReader;
 import com.cloudera.cdk.data.DatasetWriter;
-import com.cloudera.cdk.data.FieldPartitioner;
-import com.cloudera.cdk.data.Marker;
 import com.cloudera.cdk.data.PartitionKey;
-import com.cloudera.cdk.data.PartitionStrategy;
 import com.cloudera.cdk.data.View;
 import com.cloudera.cdk.data.spi.AbstractRangeView;
 import com.cloudera.cdk.data.spi.Key;
 import com.cloudera.cdk.data.spi.MarkerRange;
 
-import java.util.List;
+import com.cloudera.cdk.data.spi.RangePredicate;
 
 class DaoView<E> extends AbstractRangeView<E> {
 
@@ -37,18 +34,19 @@ class DaoView<E> extends AbstractRangeView<E> {
     this.dataset = dataset;
   }
 
-  private DaoView(DaoView<E> view, MarkerRange range) {
-    super(view, range);
+  private DaoView(DaoView<E> view, RangePredicate p) {
+    super(view, p);
     this.dataset = view.dataset;
   }
 
   @Override
-  protected DaoView<E> newLimitedCopy(MarkerRange newRange) {
-    return new DaoView<E>(this, newRange);
+  protected DaoView<E> filter(RangePredicate p) {
+    return new DaoView<E>(this, p);
   }
 
   @Override
   public DatasetReader<E> newReader() {
+    MarkerRange range = predicate.getRange();
     return dataset.getDao().getScanner(toPartitionKey(range.getStart()),
         range.getStart().isInclusive(), toPartitionKey(range.getEnd()),
         range.getEnd().isInclusive());
@@ -69,7 +67,7 @@ class DaoView<E> extends AbstractRangeView<E> {
       @Override
       public void write(E entity) {
         Key key = partitionStratKey.reuseFor(entity);
-        if (!range.contains(key)) {
+        if (!predicate.apply(key)) {
           throw new IllegalArgumentException("View does not contain entity: "
               + entity);
         }
